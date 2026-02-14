@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Suspense } from "react";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -57,6 +58,24 @@ export default function HomePage() {
 			<Suspense fallback={<ProductsGridSkeleton />}>
 				<ProductsGrid />
 			</Suspense>
+
+			<Card className="border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-950">
+				<CardHeader>
+					<CardTitle>🔬 Caso alternativo: Promise compartida</CardTitle>
+					<CardDescription>
+						Misma promesa para todos los bloques (texto, precio y stock), con un
+						Suspense por componente.
+					</CardDescription>
+				</CardHeader>
+				<CardContent>
+					<Link
+						href="/product/1/shared-promise"
+						className="inline-flex font-medium text-blue-600 hover:text-blue-800"
+					>
+						Abrir demo shared promise (/product/1/shared-promise)
+					</Link>
+				</CardContent>
+			</Card>
 
 			{/* How it works - estático */}
 			<Card className="mt-8 border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950">

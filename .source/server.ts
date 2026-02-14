@@ -1,4 +1,5 @@
 // @ts-nocheck
+import * as __fd_glob_5 from "../content/docs/shared-promise.mdx?collection=docs"
 import * as __fd_glob_4 from "../content/docs/revalidation.mdx?collection=docs"
 import * as __fd_glob_3 from "../content/docs/index.mdx?collection=docs"
 import * as __fd_glob_2 from "../content/docs/implementation.mdx?collection=docs"
@@ -12,4 +13,4 @@ const create = server<typeof Config, import("fumadocs-mdx/runtime/types").Intern
   }
 }>({"doc":{"passthroughs":["extractedReferences"]}});
 
-export const docs = await create.docs("docs", "content/docs", {}, {"benefits.mdx": __fd_glob_0, "concepts.mdx": __fd_glob_1, "implementation.mdx": __fd_glob_2, "index.mdx": __fd_glob_3, "revalidation.mdx": __fd_glob_4, });
+export const docs = await create.docs("docs", "content/docs", {}, {"benefits.mdx": __fd_glob_0, "concepts.mdx": __fd_glob_1, "implementation.mdx": __fd_glob_2, "index.mdx": __fd_glob_3, "revalidation.mdx": __fd_glob_4, "shared-promise.mdx": __fd_glob_5, });

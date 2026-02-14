@@ -1,16 +1,10 @@
 "use server";
 
 import { revalidateTag } from "next/cache";
-import { z } from "zod";
-
-const productIdSchema = z
-	.string()
-	.trim()
-	.min(1)
-	.regex(/^[a-zA-Z0-9-]+$/);
+import { parseProductId } from "@/lib/validators/product";
 
 function validateProductId(productId: string) {
-	return productIdSchema.parse(productId);
+	return parseProductId(productId);
 }
 
 export async function revalidateProductPrice(productId: string) {

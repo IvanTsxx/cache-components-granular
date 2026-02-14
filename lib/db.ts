@@ -10,6 +10,15 @@ export interface Product {
 	lastUpdated: string;
 }
 
+export interface ProductPayload {
+	id: string;
+	name: string;
+	description: string;
+	price: number;
+	stock: number;
+	lastChecked: string;
+}
+
 const products: Record<string, Product> = {
 	"1": {
 		id: "1",
@@ -44,6 +53,29 @@ const simulateDelay = (ms: number) =>
 	new Promise((resolve) => setTimeout(resolve, ms));
 
 export const db = {
+	async getProduct(productId: string): Promise<ProductPayload> {
+		await simulateDelay(220);
+		const product = products[productId];
+		if (!product) throw new Error("Product not found");
+
+		// Simula que el stock cambia
+		const stockVariation = Math.floor(Math.random() * 5) - 2;
+		const currentStock = Math.max(0, product.stock + stockVariation);
+
+		console.log(
+			`[DB Query] 🧩 getProduct (all fields) - Product ${productId} - Stock: ${currentStock}`,
+		);
+
+		return {
+			id: product.id,
+			name: product.name,
+			description: product.description,
+			price: product.price,
+			stock: currentStock,
+			lastChecked: new Date().toISOString(),
+		};
+	},
+
 	async getProductText(productId: string) {
 		await simulateDelay(100);
 		const product = products[productId];
