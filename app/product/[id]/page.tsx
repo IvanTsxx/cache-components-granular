@@ -15,7 +15,7 @@ export default function ProductPage({
 	params: Promise<{ id: string }>;
 }) {
 	return (
-		<div className="container mx-auto max-w-4xl px-4 py-8">
+		<div className="mx-auto flex w-full max-w-[900px] flex-col gap-4 px-4 py-6 [grid-area:main] md:px-6 md:pt-8 xl:px-8 xl:pt-14 xl:layout:[--fd-toc-width:268px]">
 			<Link
 				href="/"
 				className="mb-6 inline-flex items-center gap-2 font-medium text-blue-600 hover:text-blue-800"

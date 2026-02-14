@@ -12,7 +12,7 @@ import { ProductsGridSkeleton } from "./_components/products-grid-skeleton";
 
 export default function HomePage() {
 	return (
-		<div className="container mx-auto max-w-6xl px-4 py-8">
+		<div className="mx-auto flex w-full max-w-[900px] flex-col gap-4 px-4 py-6 [grid-area:main] md:px-6 md:pt-8 xl:px-8 xl:pt-14 xl:layout:[--fd-toc-width:268px]">
 			{/* Header - estático */}
 			<div className="mb-12 border-b pb-8 text-center">
 				<h1 className="mb-2 font-bold text-4xl">🛍️ Demo Cache Components</h1>
