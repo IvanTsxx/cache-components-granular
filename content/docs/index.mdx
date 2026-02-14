@@ -10,7 +10,7 @@ import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
 # Cache Components - Cacheo Granular
 
 <Callout type="info">
-Demo interactivo de cómo cachear **campos individuales** de un registro con diferentes estrategias en Next.js 16.
+Demo interactivo de cómo cachear **campos individuales** de un registro con diferentes estrategias en Next.js 16, mejorando latencia percibida y reduciendo carga en infraestructura durante request time.
 </Callout>
 
 ## El Problema
@@ -117,17 +117,22 @@ ProductPage (sync - estático)
 <Cards>
   <Card 
     title="Implementación" 
-    href="/docs/cache-components/implementation"
+    href="/docs/implementation"
     description="Código completo paso a paso"
   />
   <Card 
     title="Conceptos clave" 
-    href="/docs/cache-components/concepts"
+    href="/docs/concepts"
     description="Suspense, queries y cache"
   />
   <Card 
     title="Revalidación" 
-    href="/docs/cache-components/revalidation"
+    href="/docs/revalidation"
     description="updateTag vs revalidateTag"
+  />
+  <Card 
+    title="Beneficios y costes"
+    href="/docs/benefits"
+    description="Cómo estimar ahorro de CPU/DB y decidir granularidad"
   />
 </Cards>

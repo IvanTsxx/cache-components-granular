@@ -42,13 +42,15 @@ Cada campo es un **componente async separado** con su propia query y estrategia 
 - ✅ **Static shell + Streaming** - HTML instantáneo + datos frescos
 - ✅ **Suspense correcto** - Ejemplos de dónde va y por qué
 - ✅ **Demo interactiva** - Botones para probar revalidación en vivo
+- ✅ **Rutas estáticas de producto** - `generateStaticParams` para reforzar PPR educativo
+- ✅ **Validación con Zod** - Sanitización de `productId` en Server Actions
 - ✅ **Tailwind + shadcn/ui** - UI moderna y profesional
 - ✅ **TypeScript** - Type-safe en toda la app
 - ✅ **Mock DB con logs** - Ve qué queries se ejecutan y cuándo
 
 ## 🏗️ Arquitectura
 
-```
+```text
 ProductPage (padre - sync)
 │
 └─ <Suspense>
@@ -62,15 +64,11 @@ ProductPage (padre - sync)
 ## 📦 Instalación
 
 ```bash
-# Clonar el repo
-git clone https://github.com/tu-usuario/cache-components-demo.git
-cd cache-components-demo
-
 # Instalar dependencias
-npm install
+pnpm install
 
 # Ejecutar en desarrollo
-npm run dev
+pnpm dev
 ```
 
 Abre [http://localhost:3000](http://localhost:3000)
@@ -95,7 +93,7 @@ Abre [http://localhost:3000](http://localhost:3000)
 
 En la consola verás:
 
-```
+```text
 [DB Query] 📝 getProductText - Product 1
 [DB Query] 💰 getProductPrice - Product 1
 [DB Query] 📦 getProductStock - Product 1
@@ -110,7 +108,7 @@ En la consola verás:
 
 ## 📂 Estructura del proyecto
 
-```
+```text
 .
 ├── app/
 │   ├── page.tsx                    # Home con lista de productos
@@ -118,11 +116,12 @@ En la consola verás:
 │   ├── layout.tsx                  # Layout principal
 │   └── product/[id]/
 │       ├── page.tsx                # ⭐ Página del producto (cacheo granular)
-│       └── RevalidateButtons.tsx   # Botones de revalidación (client)
+│       └── _components/             # Componentes granulares por campo
 ├── lib/
 │   └── db.ts                       # Mock de database con queries separadas
 ├── components/ui/                  # Componentes de shadcn/ui
-├── next.config.ts                  # Config con cacheComponents: true
+├── content/docs/                   # Documentación educativa
+├── next.config.mjs                 # Config con cacheComponents: true
 └── README.md
 ```
 
@@ -155,33 +154,19 @@ Sí, son múltiples queries, pero:
 
 ```tsx
 // Cachear con tag
-cacheTag('product-price', productId)  // → 'product-price-1'
+cacheTag(`product-price-${productId}`)
 
 // Revalidar solo ese campo
-revalidateTag('product-price-1', 'max')
+revalidateTag(`product-price-${productId}`, 'max')
 ```
 
-### 4. Runtime data requiere Suspense
+## 📖 Documentación interna
 
-```tsx
-// params es runtime data
-export default function ProductPage({ params }) {
-  return (
-    <Suspense>
-      <ProductContent params={params} />
-    </Suspense>
-  )
-}
-```
-
-## 🎨 Tech Stack
-
-- **Framework:** Next.js 16.1.6 (App Router)
-- **React:** 19
-- **TypeScript:** 5
-- **Styling:** Tailwind CSS 3
-- **Components:** shadcn/ui
-- **Cache:** Cache Components (PPR)
+- `/docs` - Introducción
+- `/docs/implementation` - Implementación completa
+- `/docs/concepts` - Conceptos clave
+- `/docs/revalidation` - `updateTag` vs `revalidateTag`
+- `/docs/benefits` - Beneficios y análisis de costes
 
 ## 📚 Recursos
 
@@ -198,8 +183,7 @@ export default function ProductPage({ params }) {
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/tu-usuario/cache-components-demo)
 
 ```bash
-npm i -g vercel
-vercel
+pnpm dlx vercel
 ```
 
 ### Otros providers
@@ -207,7 +191,7 @@ vercel
 Asegúrate de:
 
 - ✅ Usar Node.js runtime (no Edge)
-- ✅ `cacheComponents: true` en next.config.ts
+- ✅ `cacheComponents: true` en next.config.mjs
 - ✅ Next.js 16.1.6 o superior
 
 ## 🐛 Troubleshooting
@@ -228,7 +212,12 @@ Asegúrate de:
 
 **Causa:** Tag incorrecto
 
-**Solución:** Verificar: `cacheTag('x', id)` → `revalidateTag('x-' + id, 'max')`
+**Solución:** Verificar que el tag sea idéntico en cache y revalidación, por ejemplo:
+
+```ts
+cacheTag(`product-price-${productId}`)
+revalidateTag(`product-price-${productId}`, 'max')
+```
 
 ## 🤝 Contribuciones
 

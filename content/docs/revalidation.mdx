@@ -339,8 +339,8 @@ updateTag('user-cart')
 
 ```ts
 // ✅ Bueno
-cacheTag('product-price', productId)
-cacheTag('user-profile', userId)
+cacheTag(`product-price-${productId}`)
+cacheTag(`user-profile-${userId}`)
 
 // ❌ Malo
 cacheTag('data', id)

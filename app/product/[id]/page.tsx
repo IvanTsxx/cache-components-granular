@@ -2,6 +2,7 @@ import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
 
+import { db } from "@/lib/db";
 import { ProductContent } from "./_components/product-content";
 import { ProductPageSkeleton } from "./_components/product-page-skeleton";
 
@@ -29,4 +30,12 @@ export default function ProductPage({
 			</Suspense>
 		</div>
 	);
+}
+
+export async function generateStaticParams() {
+	const products = await db.listProducts();
+
+	return products.map((product) => ({
+		id: product.id,
+	}));
 }

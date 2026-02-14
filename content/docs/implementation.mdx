@@ -13,20 +13,38 @@ import { Step, Steps } from 'fumadocs-ui/components/steps';
 
 ### Habilitar Cache Components
 
-Actualiza `next.config.ts`:
+Actualiza `next.config.mjs`:
 
-```ts title="next.config.ts"
-import type { NextConfig } from 'next'
-
-const nextConfig: NextConfig = {
+```js title="next.config.mjs"
+const config = {
   cacheComponents: true, // ← Habilita Cache Components
 }
 
-export default nextConfig
+export default config
 ```
 
 <Callout type="info">
 Este flag habilita **Partial Prerendering (PPR)** automáticamente.
+</Callout>
+
+### Generar rutas estáticas del segmento dinámico
+
+Para que Next.js conozca qué productos prerenderizar para `/product/[id]`, agrega `generateStaticParams`:
+
+```tsx title="app/product/[id]/page.tsx"
+import { db } from '@/lib/db'
+
+export async function generateStaticParams() {
+  const products = await db.listProducts()
+
+  return products.map((product) => ({
+    id: product.id,
+  }))
+}
+```
+
+<Callout type="warning">
+Sin `generateStaticParams`, la ruta dinámica sigue funcionando, pero pierdes parte del valor educativo de ver claramente qué paths se prerenderizan.
 </Callout>
 
 ### Crear queries separadas
@@ -76,7 +94,7 @@ export const db = {
 
 ### Componente de texto (cacheado)
 
-```tsx title="app/product/[id]/page.tsx"
+```tsx title="app/product/[id]/_components/product-text.tsx"
 async function ProductText({ productId }: { productId: string }) {
   'use cache'
   cacheTag(`product-text-${productId}`)
@@ -108,7 +126,7 @@ async function ProductText({ productId }: { productId: string }) {
 
 ### Componente de precio (cacheado)
 
-```tsx title="app/product/[id]/page.tsx"
+```tsx title="app/product/[id]/_components/product-price.tsx"
 async function ProductPrice({ productId }: { productId: string }) {
   'use cache'
   cacheTag(`product-price-${productId}`)
@@ -136,7 +154,7 @@ async function ProductPrice({ productId }: { productId: string }) {
 
 ### Componente de stock (sin cache)
 
-```tsx title="app/product/[id]/page.tsx"
+```tsx title="app/product/[id]/_components/product-stock.tsx"
 async function ProductStock({ productId }: { productId: string }) {
   // Sin 'use cache' - siempre fresh
   
@@ -225,16 +243,29 @@ async function ProductContent({
 'use server'
 
 import { revalidateTag } from 'next/cache'
+import { z } from 'zod'
+
+const productIdSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .regex(/^[a-zA-Z0-9-]+$/)
+
+function validateProductId(productId: string) {
+  return productIdSchema.parse(productId)
+}
 
 export async function revalidateProductPrice(productId: string) {
-  console.log(`[Server Action] Revalidating price for ${productId}`)
-  revalidateTag(`product-price-${productId}`, 'max')
+  const safeProductId = validateProductId(productId)
+  console.log(`[Server Action] Revalidating price for ${safeProductId}`)
+  revalidateTag(`product-price-${safeProductId}`, 'max')
   return { success: true, message: 'Precio revalidado' }
 }
 
 export async function revalidateProductText(productId: string) {
-  console.log(`[Server Action] Revalidating text for ${productId}`)
-  revalidateTag(`product-text-${productId}`, 'max')
+  const safeProductId = validateProductId(productId)
+  console.log(`[Server Action] Revalidating text for ${safeProductId}`)
+  revalidateTag(`product-text-${safeProductId}`, 'max')
   return { success: true, message: 'Texto revalidado' }
 }
 ```
@@ -246,7 +277,9 @@ export async function revalidateProductText(productId: string) {
 <Tabs items={['Build time', 'Request time', 'Después de revalidación']}>
   <Tab value="Build time">
     ```
-    npm run build
+    pnpm build
+
+    ✅ generateStaticParams lista ids estáticos de producto
     
     ✅ ProductText ejecuta query → resultado en static shell
     ✅ ProductPrice ejecuta query → resultado en static shell
@@ -296,7 +329,7 @@ export async function revalidateProductText(productId: string) {
 ### En desarrollo
 
 ```bash
-npm run dev
+pnpm dev
 ```
 
 Abre http://localhost:3000 y verifica en consola del servidor:
@@ -310,23 +343,22 @@ Abre http://localhost:3000 y verifica en consola del servidor:
 ### En producción
 
 ```bash
-npm run build
-npm start
+pnpm build
+pnpm start
 ```
 
 Verifica en el output del build:
 
 ```
 Route (app)                    Size     First Load JS
-┌ ○ /                          1.2 kB         85.3 kB
-└ ƒ /product/[id]              2.5 kB         95.1 kB
+┌ ◐ /                          2.4 kB         170 kB
+└ ◐ /product/[id]
 
-○  Static    - prerendered
-ƒ  Dynamic   - server-rendered on demand
+◐  Partial Prerender  - static HTML + contenido dinámico por streaming
 ```
 
 <Callout type="success">
-Si ves `ƒ Dynamic` para `/product/[id]`, está funcionando correctamente.
+Si ves `◐ Partial Prerender` para `/product/[id]`, está funcionando correctamente para este demo de Cache Components.
 </Callout>
 
 ## Debugging

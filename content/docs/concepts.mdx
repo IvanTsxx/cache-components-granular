@@ -168,12 +168,12 @@ revalidatePath('/product/1')
 // Cachear con tags únicos
 async function ProductPrice({ productId }) {
   'use cache'
-  cacheTag('product-price', productId)  // → 'product-price-1'
+  cacheTag(`product-price-${productId}`)
   // ...
 }
 
 // Invalidar solo el precio
-revalidateTag('product-price-1', 'max')
+revalidateTag(`product-price-${productId}`, 'max')
 
 // El texto mantiene su cache ✅
 // El stock ya no tiene cache ✅
@@ -182,12 +182,10 @@ revalidateTag('product-price-1', 'max')
 ### Anatomía de un tag
 
 ```tsx
-cacheTag('product-price', productId)
-         ↑               ↑
-         Namespace       ID específico
-         
-// Genera: 'product-price-1'
-// Permite: revalidateTag('product-price-1')
+cacheTag(`product-price-${productId}`)
+
+// Tag final: "product-price-1"
+// Permite: revalidateTag('product-price-1', 'max')
 ```
 
 **Ventaja:** Revalidación quirúrgica sin afectar otros campos.
@@ -290,7 +288,7 @@ Static Shell          Streaming
 Perfiles predefinidos para diferentes tipos de contenido:
 
 ```tsx
-cacheLife('seconds')  // Muy volátil (ej: stock market)
+cacheLife('default')  // Balance general
 cacheLife('minutes')  // Volátil (ej: trending topics)
 cacheLife('hours')    // Cambia ocasionalmente (ej: precios)
 cacheLife('days')     // Cambia raramente (ej: categorías)
