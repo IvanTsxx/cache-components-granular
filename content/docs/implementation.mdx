@@ -277,7 +277,7 @@ export async function revalidateProductText(productId: string) {
 <Tabs items={['Build time', 'Request time', 'Después de revalidación']}>
   <Tab value="Build time">
     ```
-    pnpm build
+    bun build
 
     ✅ generateStaticParams lista ids estáticos de producto
     
@@ -329,7 +329,7 @@ export async function revalidateProductText(productId: string) {
 ### En desarrollo
 
 ```bash
-pnpm dev
+bun dev
 ```
 
 Abre http://localhost:3000 y verifica en consola del servidor:
@@ -343,8 +343,8 @@ Abre http://localhost:3000 y verifica en consola del servidor:
 ### En producción
 
 ```bash
-pnpm build
-pnpm start
+bun build
+bun start
 ```
 
 Verifica en el output del build:

@@ -14,7 +14,6 @@ import { ProductsGridSkeleton } from "./_components/products-grid-skeleton";
 export default function HomePage() {
 	return (
 		<div className="mx-auto flex w-full max-w-[900px] flex-col gap-4 px-4 py-6 [grid-area:main] md:px-6 md:pt-8 xl:px-8 xl:pt-14 xl:layout:[--fd-toc-width:268px]">
-			{/* Header - estático */}
 			<div className="mb-12 border-b pb-8 text-center">
 				<h1 className="mb-2 font-bold text-4xl">🛍️ Demo Cache Components</h1>
 				<p className="text-lg text-muted-foreground">
@@ -22,7 +21,6 @@ export default function HomePage() {
 				</p>
 			</div>
 
-			{/* Explanation - estático */}
 			<Card className="mb-8">
 				<CardHeader>
 					<CardTitle>¿Qué demuestra esta app?</CardTitle>
@@ -54,7 +52,7 @@ export default function HomePage() {
 				</CardContent>
 			</Card>
 
-			{/* Products - con Suspense porque es async */}
+			{/*con Suspense porque es async */}
 			<Suspense fallback={<ProductsGridSkeleton />}>
 				<ProductsGrid />
 			</Suspense>
@@ -77,7 +75,6 @@ export default function HomePage() {
 				</CardContent>
 			</Card>
 
-			{/* How it works - estático */}
 			<Card className="mt-8 border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950">
 				<CardHeader>
 					<CardTitle className="text-blue-900 dark:text-blue-100">

@@ -146,13 +146,3 @@ No todo debe cachearse granularmente. Puede empeorar si:
 - [ ] Runtime data dentro de `Suspense`
 - [ ] Medición con logs y headers (`x-nextjs-cache`)
 
-## Qué medir en producción
-
-Métricas mínimas recomendadas:
-
-- P95/P99 de latencia en páginas críticas
-- Ratio HIT/MISS/STALE por ruta
-- Queries por request (promedio y percentiles)
-- CPU por request en SSR
-
-Con esas 4 métricas puedes justificar ahorro de costos con datos, no solo con teoría.

@@ -1,97 +1,111 @@
-# 🚀 Cache Components Demo - Next.js 16
+# 🚀 Cache Components Demo – Next.js 16
 
-> Demostración práctica de cacheo granular por campo usando Cache Components en Next.js 16
+> Practical demonstration of **field-level granular caching** using Cache Components in Next.js 16.
+
+📄 Spanish version: [Leer en Español](./readme.es.md)
 
 [![Next.js](https://img.shields.io/badge/Next.js-16.1.6-black?logo=next.js)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19-blue?logo=react)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-4-48bdf8?logo=tailwind-css)](https://tailwindcss.com/)
 
-## 🎯 ¿Qué resuelve?
+---
 
-Este proyecto demuestra cómo cachear **campos individuales de un registro** con diferentes estrategias en Next.js 16.
+## 🎯 What Problem Does This Solve?
 
-### Problema común
+This project demonstrates how to cache **individual fields of a record** using different strategies in Next.js 16.
 
-Tienes un producto con 3 campos que cambian a diferentes velocidades:
+### Common Scenario
 
-- **Texto** (nombre + descripción): Rara vez cambia
-- **Precio**: Cambia ocasionalmente
-- **Stock**: Debe estar siempre actualizado
+You have a product with three fields that change at different rates:
 
-¿Cómo cacheas cada campo independientemente?
+- **Text** (name + description): Rarely changes  
+- **Price**: Changes occasionally  
+- **Stock**: Must always be up to date  
 
-### Solución
+How do you cache each field independently?
 
-Cada campo es un **componente async separado** con su propia query y estrategia de cache.
+### The Solution
+
+Each field is implemented as a **separate async component**, with its own query and caching strategy.
 
 ```tsx
-// ✅ Cada campo con su estrategia
-<ProductText productId={id} />      // Cacheado 1 semana
-<ProductPrice productId={id} />     // Cacheado 1 hora
+// ✅ Each field has its own strategy
+<ProductText productId={id} />      // Cached for 1 week
+<ProductPrice productId={id} />     // Cached for 1 hour
 <Suspense>
-  <ProductStock productId={id} />   // Sin cache (streaming)
+  <ProductStock productId={id} />   // No cache (streaming)
 </Suspense>
-```
+````
+
+---
 
 ## ✨ Features
 
-- ✅ **Cacheo granular por campo** - Control independiente de cada dato
-- ✅ **Queries separadas** - Una query por campo, optimización automática
-- ✅ **Tags para revalidación** - Invalida solo lo que cambió
-- ✅ **Static shell + Streaming** - HTML instantáneo + datos frescos
-- ✅ **Suspense correcto** - Ejemplos de dónde va y por qué
-- ✅ **Demo interactiva** - Botones para probar revalidación en vivo
-- ✅ **Rutas estáticas de producto** - `generateStaticParams` para reforzar PPR educativo
-- ✅ **Validación con Zod** - Sanitización de `productId` en Server Actions
-- ✅ **Tailwind + shadcn/ui** - UI moderna y profesional
-- ✅ **TypeScript** - Type-safe en toda la app
-- ✅ **Mock DB con logs** - Ve qué queries se ejecutan y cuándo
+- ✅ **Granular field-level caching** — Independent control over each data segment
+- ✅ **Separated queries** — One query per field, automatically optimized
+- ✅ **Tag-based revalidation** — Invalidate only what changed
+- ✅ **Static shell + Streaming** — Instant HTML + fresh runtime data
+- ✅ **Correct Suspense boundaries** — Clear examples of placement and reasoning
+- ✅ **Interactive demo** — Buttons to test live revalidation
+- ✅ **Static product routes** — `generateStaticParams` reinforcing educational PPR
+- ✅ **Zod validation** — `productId` sanitization in Server Actions
+- ✅ **Tailwind + shadcn/ui** — Modern, professional UI
+- ✅ **TypeScript** — Fully type-safe
+- ✅ **Mock DB with logs** — Observe when and how queries execute
 
-## 🏗️ Arquitectura
+---
+
+## 🏗️ Architecture
 
 ```text
-ProductPage (padre - sync)
+ProductPage (parent - sync)
 │
 └─ <Suspense>
-   └─ ProductContent (async - accede a params)
+   └─ ProductContent (async - accesses params)
       ├─ ProductText (async + 'use cache' + cacheLife('weeks'))
       ├─ ProductPrice (async + 'use cache' + cacheLife('hours'))
       └─ <Suspense>
-         └─ ProductStock (async sin cache - streaming)
+         └─ ProductStock (async without cache - streaming)
 ```
 
-## 📦 Instalación
+---
+
+## 📦 Installation
 
 ```bash
-# Instalar dependencias
-pnpm install
+# Install dependencies
+bun install
 
-# Ejecutar en desarrollo
-pnpm dev
+# Start development server
+bun dev
 ```
 
-Abre [http://localhost:3000](http://localhost:3000)
+Open: [http://localhost:3000](http://localhost:3000)
 
-## 🎮 Cómo usar
+---
 
-### 1. Ver la demo en acción
+## 🎮 How to Use
 
-- Home muestra lista de productos
-- Click en cualquier producto
-- Observa los badges de color indicando qué está cacheado
+### 1. View the Demo
 
-### 2. Ver en Network tab
+- The home page displays a product list
+- Click any product
+- Observe colored badges indicating cache behavior
 
-- Abre DevTools → Network
+### 2. Inspect Network Tab
+
+- Open DevTools → Network
 - Disable cache
-- Navega a un producto
-- Ve cómo el HTML inicial ya tiene texto y precio
-- Ve cómo el stock llega después (streaming)
+- Navigate to a product
+- Notice:
 
-### 3. Ver logs del servidor
+  - Initial HTML already contains text and price
+  - Stock arrives later via streaming
 
-En la consola verás:
+### 3. Check Server Logs
+
+In your terminal:
 
 ```text
 [DB Query] 📝 getProductText - Product 1
@@ -99,156 +113,140 @@ En la consola verás:
 [DB Query] 📦 getProductStock - Product 1
 ```
 
-### 4. Probar revalidación
+### 4. Test Revalidation
 
-- Click en "Revalidar Precio"
-- Refresh la página
-- Solo el precio se regenera
-- El texto mantiene su cache
+- Click **"Revalidate Price"**
+- Refresh the page
+- Only the price regenerates
+- Text remains cached
 
-## 📂 Estructura del proyecto
+---
 
-```text
-.
-├── app/
-│   ├── page.tsx                    # Home con lista de productos
-│   ├── actions.ts                  # Server Actions para revalidación
-│   ├── layout.tsx                  # Layout principal
-│   └── product/[id]/
-│       ├── page.tsx                # ⭐ Página del producto (cacheo granular)
-│       └── _components/             # Componentes granulares por campo
-├── lib/
-│   └── db.ts                       # Mock de database con queries separadas
-├── components/ui/                  # Componentes de shadcn/ui
-├── content/docs/                   # Documentación educativa
-├── next.config.mjs                 # Config con cacheComponents: true
-└── README.md
-```
+## 🔑 Key Concepts
 
-## 🔑 Conceptos clave
-
-### 1. Componente async = Promesa
+### 1. Async Component = Promise
 
 ```tsx
-// El componente async ES una promesa
+// An async component IS a promise
 async function ProductStock({ productId }) {
   const stock = await db.getStock(productId)
   return <div>{stock}</div>
 }
 
-// Por eso Suspense va en el PADRE
+// Suspense must wrap it in the PARENT
 <Suspense fallback="Loading...">
-  <ProductStock />  {/* ← Esta línea crea la promesa */}
+  <ProductStock />  {/* ← This line creates the promise */}
 </Suspense>
 ```
 
-### 2. Múltiples queries vs Cache
+---
 
-Sí, son múltiples queries, pero:
+### 2. Multiple Queries vs Cache
 
-- Las **cacheadas** se ejecutan en **build time** → static shell
-- Las **dinámicas** se ejecutan en **request time** → streaming
-- Total: Mejor performance percibida
+Yes, there are multiple queries — but:
 
-### 3. Tags para revalidación
+- **Cached queries** run at **build time** → static shell
+- **Dynamic queries** run at **request time** → streaming
+- Result: Improved perceived performance
+
+---
+
+### 3. Tag-Based Revalidation
 
 ```tsx
-// Cachear con tag
+// Cache with tag
 cacheTag(`product-price-${productId}`)
 
-// Revalidar solo ese campo
+// Revalidate only that field
 revalidateTag(`product-price-${productId}`, 'max')
 ```
 
-## 📖 Documentación interna
+---
 
-- `/docs` - Introducción
-- `/docs/implementation` - Implementación completa
-- `/docs/concepts` - Conceptos clave
-- `/docs/revalidation` - `updateTag` vs `revalidateTag`
-- `/docs/benefits` - Beneficios y análisis de costes
+## 📖 Internal Documentation
 
-## 📚 Recursos
+- `/docs` — Introduction
+- `/docs/implementation` — Full implementation
+- `/docs/concepts` — Core concepts
+- `/docs/revalidation` — `updateTag` vs `revalidateTag`
+- `/docs/benefits` — Advantages
 
-- [Documentación oficial de Cache Components](https://nextjs.org/docs/app/getting-started/cache-components)
+---
+
+## 📚 Resources
+
+- [Cache Components Documentation](https://nextjs.org/docs/app/getting-started/cache-components)
 - [use cache directive](https://nextjs.org/docs/app/api-reference/directives/use-cache)
 - [cacheLife API](https://nextjs.org/docs/app/api-reference/functions/cacheLife)
 - [cacheTag API](https://nextjs.org/docs/app/api-reference/functions/cacheTag)
 - [revalidateTag API](https://nextjs.org/docs/app/api-reference/functions/revalidateTag)
+- [Next Skills](https://skills.sh/vercel-labs/next-skills/next-cache-components)
 
-## 🚢 Deploy
-
-### Vercel (Recomendado)
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/tu-usuario/cache-components-demo)
-
-```bash
-pnpm dlx vercel
-```
-
-### Otros providers
-
-Asegúrate de:
-
-- ✅ Usar Node.js runtime (no Edge)
-- ✅ `cacheComponents: true` en next.config.mjs
-- ✅ Next.js 16.1.6 o superior
+---
 
 ## 🐛 Troubleshooting
 
 ### Error: "Uncached data was accessed outside of Suspense"
 
-**Causa:** Componente async sin cache ni Suspense
+**Cause:** Async component without cache or Suspense
 
-**Solución:** Agregar `<Suspense>` en el padre o `'use cache'` en el componente
+**Fix:** Add `<Suspense>` in the parent or `'use cache'` inside the component
 
-### Stock no cambia en refresh
+---
 
-**Causa:** Browser cache activado
+### Stock does not update on refresh
 
-**Solución:** Hard refresh (Ctrl+Shift+R) o ventana privada
+**Cause:** Browser cache enabled
 
-### Revalidación no funciona
+**Fix:** Hard refresh (`Ctrl + Shift + R`) or use a private window
 
-**Causa:** Tag incorrecto
+---
 
-**Solución:** Verificar que el tag sea idéntico en cache y revalidación, por ejemplo:
+### Revalidation does not work
+
+**Cause:** Incorrect tag
+
+**Fix:** Ensure the tag is identical in both cache and revalidation:
 
 ```ts
 cacheTag(`product-price-${productId}`)
 revalidateTag(`product-price-${productId}`, 'max')
 ```
 
-## 🤝 Contribuciones
+---
 
-Las contribuciones son bienvenidas! Por favor:
+## 🤝 Contributing
 
-1. Fork el proyecto
-2. Crea una rama (`git checkout -b feature/amazing-feature`)
-3. Commit tus cambios (`git commit -m 'Add amazing feature'`)
-4. Push a la rama (`git push origin feature/amazing-feature`)
-5. Abre un Pull Request
+Contributions are welcome:
 
-## 📝 Licencia
-
-MIT
-
-## 👤 Autor
-
-Creado para demostrar Cache Components en Next.js 16
+1. Fork the repository
+2. Create a branch (`git checkout -b feature/amazing-feature`)
+3. Commit changes (`git commit -m 'Add amazing feature'`)
+4. Push to your branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ---
 
-**⭐ Si este proyecto te ayudó a entender Cache Components, dale una estrella!**
+## 📝 License
 
-## 💡 ¿Aprendiste algo?
+MIT
 
-Este proyecto demuestra patrones avanzados de Next.js 16:
+---
 
-- Cacheo granular con `use cache`
-- Suspense boundaries correctos
+## 👤 Author
+
+Created to demonstrate Cache Components in Next.js 16.
+
+---
+
+## 💡 What You’ll Learn
+
+This project showcases advanced Next.js 16 patterns:
+
+- Granular caching with `use cache`
+- Proper Suspense boundaries
 - Runtime data handling
-- Revalidación selectiva con tags
+- Selective tag-based revalidation
 - Static shell + Streaming (PPR)
 
-Úsalo como referencia para tus proyectos reales.
+Use this repository as a reference for real-world implementations.

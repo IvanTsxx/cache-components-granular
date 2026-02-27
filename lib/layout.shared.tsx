@@ -5,5 +5,6 @@ export function baseOptions(): BaseLayoutProps {
 		nav: {
 			title: "Demo",
 		},
+		githubUrl: "https://github.com/IvanTsxx/cache-components-granular",
 	};
 }

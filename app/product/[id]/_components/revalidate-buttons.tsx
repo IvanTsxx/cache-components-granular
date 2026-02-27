@@ -7,7 +7,7 @@ import {
 	revalidateProductPrice,
 	revalidateProductText,
 } from "@/app/actions";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import {
 	Card,
 	CardContent,
@@ -15,6 +15,7 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 export function RevalidateButtons({ productId }: { productId: string }) {
 	const [loading, setLoading] = useState<string | null>(null);
@@ -56,38 +57,59 @@ export function RevalidateButtons({ productId }: { productId: string }) {
 			</CardHeader>
 			<CardContent className="space-y-4">
 				<div className="flex flex-wrap gap-3">
-					<Button
+					<button
+						type="button"
 						onClick={() => handleRevalidate("text")}
 						disabled={loading !== null}
-						className="bg-green-600 hover:bg-green-700"
+						className={cn(
+							buttonVariants({
+								color: "primary",
+								size: "sm",
+							}),
+							"bg-green-600 hover:bg-green-700",
+						)}
 					>
 						{loading === "text" && (
 							<Loader2 className="mr-2 h-4 w-4 animate-spin" />
 						)}
 						Revalidar Texto
-					</Button>
+					</button>
 
-					<Button
+					<button
+						type="button"
 						onClick={() => handleRevalidate("price")}
 						disabled={loading !== null}
-						className="bg-blue-600 hover:bg-blue-700"
+						className={cn(
+							buttonVariants({
+								color: "primary",
+								size: "sm",
+							}),
+							"bg-blue-600 hover:bg-blue-700",
+						)}
 					>
 						{loading === "price" && (
 							<Loader2 className="mr-2 h-4 w-4 animate-spin" />
 						)}
 						Revalidar Precio
-					</Button>
+					</button>
 
-					<Button
+					<button
+						type="button"
 						onClick={() => handleRevalidate("all")}
 						disabled={loading !== null}
-						className="bg-purple-600 hover:bg-purple-700"
+						className={cn(
+							buttonVariants({
+								color: "primary",
+								size: "sm",
+							}),
+							"bg-purple-600 hover:bg-purple-700",
+						)}
 					>
 						{loading === "all" && (
 							<Loader2 className="mr-2 h-4 w-4 animate-spin" />
 						)}
 						Revalidar Todo
-					</Button>
+					</button>
 				</div>
 
 				{status && (

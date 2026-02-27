@@ -1,4 +1,4 @@
-import { DocsLayout } from "fumadocs-ui/layouts/docs";
+import { DocsLayout } from "fumadocs-ui/layouts/notebook";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, JetBrains_Mono } from "next/font/google";
 import { baseOptions } from "@/lib/layout.shared";
@@ -45,7 +45,11 @@ export default function RootLayout({
 					}}
 				>
 					<Suspense fallback={<RootLayoutSkeleton />}>
-						<DocsLayout tree={source.getPageTree()} {...baseOptions()}>
+						<DocsLayout
+							tabMode="navbar"
+							tree={source.getPageTree()}
+							{...baseOptions()}
+						>
 							{children}
 						</DocsLayout>
 					</Suspense>
