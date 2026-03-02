@@ -87,9 +87,11 @@ export function ViewOptions({
   lang: string;
 }) {
   const items = useMemo(() => {
-    const pageUrl =
-      typeof window !== "undefined" ? window.location.href : "loading";
-    const q = `Read ${pageUrl}, I want to ask questions about it.`;
+    const fullMarkdownUrl =
+      typeof window !== "undefined"
+        ? new URL(markdownUrl, window.location.origin)
+        : "loading";
+    const q = `Read ${fullMarkdownUrl}, I want to ask questions about it.`;
 
     return [
       {

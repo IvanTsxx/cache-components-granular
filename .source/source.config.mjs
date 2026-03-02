@@ -4,27 +4,30 @@ import { metaSchema, pageSchema } from "fumadocs-core/source/schema";
 import { defineConfig, defineDocs } from "fumadocs-mdx/config";
 import lastModified from "fumadocs-mdx/plugins/last-modified";
 import { z } from "zod";
-const feedbackOptions = {
+var feedbackOptions = {
   // other options:
 };
-const docs = defineDocs({
+var docs = defineDocs({
   dir: "content/docs",
   docs: {
     postprocess: {
-      includeProcessedMarkdown: true,
+      includeProcessedMarkdown: true
     },
     schema: pageSchema.extend({
-      keywords: z.array(z.string()).optional(),
-    }),
+      keywords: z.array(z.string()).optional()
+    })
   },
   meta: {
-    schema: metaSchema,
-  },
+    schema: metaSchema
+  }
 });
-const source_config_default = defineConfig({
+var source_config_default = defineConfig({
   mdxOptions: {
-    remarkPlugins: [[remarkFeedbackBlock, feedbackOptions]],
+    remarkPlugins: [[remarkFeedbackBlock, feedbackOptions]]
   },
-  plugins: [lastModified()],
+  plugins: [lastModified()]
 });
-export { source_config_default as default, docs };
+export {
+  source_config_default as default,
+  docs
+};

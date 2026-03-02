@@ -41,7 +41,7 @@ export default async function Page(
         />
         <ViewOptions
           markdownUrl={page.url.replace("/docs", "/llms.mdx/docs")}
-          githubUrl={`https://github.com/${owner}/${repo}/blob/dev/apps/docs/content/docs/${page.path}`}
+          githubUrl={`https://github.com/${owner}/${repo}/blob/main/content/docs/${page.path}`}
           lang={params.lang}
         />
       </div>
