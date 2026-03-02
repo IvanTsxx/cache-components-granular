@@ -9,9 +9,10 @@ import {
   DocsPage,
   DocsTitle,
 } from "@/components/layout/notebook/page";
+import { PageLastUpdate } from "@/components/layout/notebook/page/client";
 import { LLMCopyButton, ViewOptions } from "@/components/page-actions";
 import { onPageFeedbackAction } from "@/lib/github";
-import { source } from "@/lib/source";
+import { getPageImage, source } from "@/lib/source";
 import { getMDXComponents } from "@/mdx-components";
 
 const owner = "IvanTsxx";
@@ -28,8 +29,11 @@ export default async function Page(
 
   const MDX = page.data.body;
 
+  const { lastModified } = await page.data;
+
   return (
     <DocsPage toc={page.data.toc} full={page.data.full}>
+      {lastModified && <PageLastUpdate date={lastModified} />}
       <div className="flex flex-row gap-2 items-center border-b pt-2 pb-6">
         <LLMCopyButton
           markdownUrl={page.url.replace("/docs", "/llms.mdx/docs")}
@@ -71,6 +75,9 @@ export async function generateMetadata(
 
   return {
     description: page.data.description,
+    openGraph: {
+      images: getPageImage(page).url,
+    },
     title: page.data.title,
   };
 }

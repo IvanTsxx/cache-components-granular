@@ -372,3 +372,25 @@ export function PageBreadcrumb({
     </div>
   );
 }
+
+export function PageLastUpdate({
+  date: value,
+  ...props
+}: Omit<ComponentProps<"p">, "children"> & { date: Date }) {
+  const { text } = useI18n();
+  const [date, setDate] = useState("");
+
+  useEffect(() => {
+    // to the timezone of client
+    setDate(value.toLocaleDateString());
+  }, [value]);
+
+  return (
+    <p
+      {...props}
+      className={cn("text-fd-muted-foreground text-sm", props.className)}
+    >
+      {text.lastUpdate} {date}
+    </p>
+  );
+}

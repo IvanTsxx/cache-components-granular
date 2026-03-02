@@ -10,5 +10,6 @@
     "complexity": "off",
     "no-param-reassign": "off",
     "no-shadow": "off"
-  }
+  },
+  "ignorePatterns": [".source/**"]
 }

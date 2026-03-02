@@ -12,6 +12,7 @@ const config = {
       },
     ];
   },
+  serverExternalPackages: ["@takumi-rs/image-response"],
   typedRoutes: true,
 };
 

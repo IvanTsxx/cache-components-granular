@@ -1,23 +1,30 @@
 // source.config.ts
 import { remarkFeedbackBlock } from "fumadocs-core/mdx-plugins/remark-feedback-block";
+import { metaSchema, pageSchema } from "fumadocs-core/source/schema";
 import { defineConfig, defineDocs } from "fumadocs-mdx/config";
-var feedbackOptions = {
+import lastModified from "fumadocs-mdx/plugins/last-modified";
+import { z } from "zod";
+const feedbackOptions = {
   // other options:
 };
-var docs = defineDocs({
+const docs = defineDocs({
   dir: "content/docs",
   docs: {
     postprocess: {
-      includeProcessedMarkdown: true
-    }
-  }
+      includeProcessedMarkdown: true,
+    },
+    schema: pageSchema.extend({
+      keywords: z.array(z.string()).optional(),
+    }),
+  },
+  meta: {
+    schema: metaSchema,
+  },
 });
-var source_config_default = defineConfig({
+const source_config_default = defineConfig({
   mdxOptions: {
-    remarkPlugins: [[remarkFeedbackBlock, feedbackOptions]]
-  }
+    remarkPlugins: [[remarkFeedbackBlock, feedbackOptions]],
+  },
+  plugins: [lastModified()],
 });
-export {
-  source_config_default as default,
-  docs
-};
+export { source_config_default as default, docs };

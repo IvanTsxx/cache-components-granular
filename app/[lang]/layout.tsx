@@ -1,13 +1,18 @@
 import "@/app/globals.css";
+import { Analytics } from "@vercel/analytics/next";
 import { defineI18nUI } from "fumadocs-ui/i18n";
 import { RootProvider } from "fumadocs-ui/provider/next";
+import { MessageCircleIcon } from "lucide-react";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 
 import { DocsLayout } from "@/components/layout/notebook";
+import { AISearch, AISearchPanel, AISearchTrigger } from "@/components/search";
+import { buttonVariants } from "@/components/ui/button";
 import { i18n } from "@/lib/i18n";
 import { baseOptions } from "@/lib/layout.shared";
 import { source } from "@/lib/source";
+import { cn } from "@/lib/utils";
 
 const geistSans = Geist({
   subsets: ["latin"],
@@ -72,9 +77,25 @@ export default async function RootLayout({
             tree={source.getPageTree(lang)}
             {...baseOptions(lang)}
           >
+            <AISearch>
+              <AISearchPanel />
+              <AISearchTrigger
+                position="float"
+                className={cn(
+                  buttonVariants({
+                    className: "text-fd-muted-foreground rounded-2xl",
+                    variant: "secondary",
+                  })
+                )}
+              >
+                <MessageCircleIcon className="size-4.5" />
+                Ask AI
+              </AISearchTrigger>
+            </AISearch>
             {children}
           </DocsLayout>
         </RootProvider>
+        <Analytics />
       </body>
     </html>
   );
