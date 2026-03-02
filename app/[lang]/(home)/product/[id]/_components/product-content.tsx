@@ -24,6 +24,7 @@ export function ProductContent({
   return (
     <div className="space-y-6">
       <Link
+        prefetch={false}
         href={`/${lang}/product/${safeProductId}/shared-promise`}
         className="inline-flex font-medium text-blue-600 hover:text-blue-800"
       >

@@ -50,3 +50,14 @@ export async function revalidateProduct(productId: string) {
   invalidateCacheCreatedAt(priceTag, textTag, sharedTag);
   return { message: "Producto completo revalidado", success: true };
 }
+
+export async function revalidateSharedPromiseProduct(productId: string) {
+  const safeProductId = validateProductId(productId);
+  const sharedCacheTag = `product-shared-${productId}`;
+  console.log(
+    `[Server Action] 🔄 Revalidating shared promise for product ${safeProductId}`
+  );
+  revalidateTag(sharedCacheTag, "max");
+  invalidateCacheCreatedAt(sharedCacheTag);
+  return { message: "Shared promise revalidado exitosamente", success: true };
+}

@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/cn";
 
-export type LanguageSelectProps = ComponentProps<"button">;
+type LanguageSelectProps = ComponentProps<"button">;
 
 export function LanguageToggle(props: LanguageSelectProps): React.ReactElement {
   const context = useI18n();
@@ -57,13 +57,4 @@ export function LanguageToggle(props: LanguageSelectProps): React.ReactElement {
       </PopoverContent>
     </Popover>
   );
-}
-
-export function LanguageToggleText(props: ComponentProps<"span">) {
-  const context = useI18n();
-  const text = context.locales?.find(
-    (item) => item.locale === context.locale
-  )?.name;
-
-  return <span {...props}>{text}</span>;
 }

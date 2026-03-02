@@ -16,6 +16,7 @@ export async function ProductsGrid({ lang }: { lang: string }) {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {products.map((product) => (
           <Link
+            prefetch={false}
             key={product.id}
             href={`/${lang}/product/${product.id}` as Route}
           >

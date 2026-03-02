@@ -1,11 +1,10 @@
 import type { AnchorProviderProps, TOCItemType } from "fumadocs-core/toc";
 import { I18nLabel } from "fumadocs-ui/contexts/i18n";
-import { Edit, Text } from "lucide-react";
+import { Text } from "lucide-react";
 import type { ComponentProps, ReactNode } from "react";
 
 import { TOCProvider, TOCScrollArea } from "@/components/toc";
 import * as TocDefault from "@/components/toc/default";
-import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 import {
@@ -27,7 +26,7 @@ interface FooterOptions extends FooterProps {
   component: ReactNode;
 }
 
-export interface DocsPageProps {
+interface DocsPageProps {
   toc?: TOCItemType[];
   tableOfContent?: Partial<TableOfContentOptions>;
   tableOfContentPopover?: Partial<TableOfContentPopoverOptions>;
@@ -183,31 +182,6 @@ export function DocsPage({
   );
 }
 
-export function EditOnGitHub(props: ComponentProps<"a">) {
-  return (
-    <a
-      target="_blank"
-      rel="noreferrer noopener"
-      {...props}
-      className={cn(
-        buttonVariants({
-          className: "gap-1.5 not-prose",
-          color: "secondary",
-          size: "sm",
-        }),
-        props.className
-      )}
-    >
-      {props.children ?? (
-        <>
-          <Edit className="size-3.5" />
-          <I18nLabel label="editOnGithub" />
-        </>
-      )}
-    </a>
-  );
-}
-
 /**
  * Add typography styles
  */
@@ -254,5 +228,3 @@ export function DocsTitle({
     </h1>
   );
 }
-
-export { PageLastUpdate, PageBreadcrumb } from "./client";

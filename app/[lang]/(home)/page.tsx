@@ -125,6 +125,7 @@ export default async function HomePage({
         </CardHeader>
         <CardContent>
           <Link
+            prefetch={false}
             href={`/${lang}/product/1/shared-promise`}
             className="inline-flex font-medium text-blue-600 hover:text-blue-800"
           >

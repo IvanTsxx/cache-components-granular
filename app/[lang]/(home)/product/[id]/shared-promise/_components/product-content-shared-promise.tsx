@@ -18,6 +18,7 @@ import {
   ProductStockFromPromiseSkeleton,
   ProductTextFromPromiseSkeleton,
 } from "./promise-field-skeletons";
+import { RevalidateButtonsSharedPromise } from "./revalidate-buttons-share-promise";
 import { getSharedProduct } from "./shared-product";
 
 export function ProductContentSharedPromise({
@@ -73,6 +74,7 @@ export function ProductContentSharedPromise({
               : "Trade-off: when invalidating this approach, the full payload is recalculated."}
           </p>
           <Link
+            prefetch={false}
             href={`/${params.lang}/product/${safeProductId}`}
             className="inline-flex font-medium text-blue-600 hover:text-blue-800"
           >
@@ -109,6 +111,11 @@ export function ProductContentSharedPromise({
           lang={params.lang}
         />
       </Suspense>
+
+      <RevalidateButtonsSharedPromise
+        lang={params.lang}
+        productId={safeProductId}
+      />
     </div>
   );
 }

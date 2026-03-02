@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const productIdSchema = z
+const productIdSchema = z
   .string()
   .trim()
   .min(1)
