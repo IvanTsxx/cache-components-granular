@@ -7,7 +7,6 @@ export async function GET(
   _req: Request,
   { params }: RouteContext<"/[lang]/llms.mdx/docs/[[...slug]]">
 ) {
-  console.log("LLMS.MDX");
   const { slug, lang } = await params;
 
   const slugContainsLocale = slug?.includes(lang);
@@ -27,8 +26,6 @@ export async function GET(
   if (!page) {
     notFound();
   }
-
-  console.log(page);
 
   return new Response(await getLLMText(page), {
     headers: {

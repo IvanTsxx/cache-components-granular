@@ -1,4 +1,5 @@
 import { ArrowLeft } from "lucide-react";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 
@@ -10,6 +11,55 @@ import { ProductPageSkeleton } from "./_components/product-page-skeleton";
 // ============================================
 // COMPONENTE PRINCIPAL - Solo estructura estática
 // ============================================
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{
+    id: string;
+    lang: string;
+  }>;
+}): Promise<Metadata> {
+  const { id, lang } = await params;
+
+  let productText;
+  try {
+    productText = await db.getProductText(id);
+  } catch {
+    productText = {
+      description: "Demo product for Next.js Cache Components",
+      name: `Product ${id}`,
+    };
+  }
+
+  if (lang === "es") {
+    return {
+      description: `Ejemplo de cacheo granular en Next.js 16: ${productText.description}`,
+      keywords: [
+        "nextjs cache components",
+        "nextjs 16",
+        "ejemplos de nextjs cache components",
+        "granular caching",
+        "PPR",
+        "suspense",
+      ],
+      title: `${productText.name} | Demo de Componentes Next.js 16`,
+    };
+  }
+
+  return {
+    description: `Granular caching example in Next.js 16: ${productText.description}`,
+    keywords: [
+      "nextjs cache components",
+      "nextjs 16",
+      "nextjs cache components examples",
+      "granular caching",
+      "PPR",
+      "suspense",
+    ],
+    title: `${productText.name} | Next.js 16 Cache Components Demo`,
+  };
+}
+
 export default async function ProductPage(
   props: PageProps<"/[lang]/product/[id]">
 ) {

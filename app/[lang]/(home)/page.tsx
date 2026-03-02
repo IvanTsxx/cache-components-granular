@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 
@@ -66,6 +67,55 @@ const translations = {
       "Cacheo independiente de campos dentro del mismo registro",
   },
 } as const;
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{
+    lang: string;
+  }>;
+}): Promise<Metadata> {
+  const { lang } = await params;
+
+  if (lang === "es") {
+    return {
+      description:
+        "Aprende a usar Next.js Cache Components con ejemplos interactivos. Domina el cacheo granular en Next.js 16, compartiendo promesas y renderizado parcial (PPR). Atrévete a ver nuestros ejemplos de nextjs cache components en vivo.",
+      keywords: [
+        "nextjs cache components",
+        "nextjs 16",
+        "ejemplos de nextjs cache components",
+        "nextjs caching",
+        "react cache components",
+        "granular caching",
+        "PPR",
+        "suspense",
+        "web performance",
+        "tutorial nextjs",
+      ],
+      title:
+        "Ejemplos de Next.js Cache Components en Next.js 16 | Granular Caching",
+    };
+  }
+
+  return {
+    description:
+      "Learn how to use Next.js Cache Components with interactive examples. Master granular caching in Next.js 16, sharing promises, and partial prerendering (PPR). Check out our nextjs cache components examples in real-time.",
+    keywords: [
+      "nextjs cache components",
+      "nextjs 16",
+      "nextjs cache components examples",
+      "nextjs caching",
+      "react cache components",
+      "granular caching",
+      "PPR",
+      "suspense",
+      "web performance",
+      "nextjs tutorial",
+    ],
+    title: "Next.js Cache Components Examples in Next.js 16 | Granular Caching",
+  };
+}
 
 export default async function HomePage({
   params,
