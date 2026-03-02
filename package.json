@@ -6,7 +6,6 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint",
     "check": "ultracite check",
     "fix": "ultracite fix",
     "prepare": "husky"
@@ -58,7 +57,7 @@
     "ultracite": "7.2.4"
   },
   "lint-staged": {
-    "*.{js,jsx,ts,tsx,json,jsonc,css,scss,md,mdx}": [
+    "*.{js,jsx,ts,tsx,css,scss,md,mdx}": [
       "bun x ultracite fix"
     ]
   }

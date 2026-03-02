@@ -24,11 +24,31 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
 });
 
-export const metadata: Metadata = {
-  description:
-    "Demo educativa de Cache Components en Next.js 16: cacheo granular, Suspense, revalidación y beneficios de performance/coste.",
-  title: "Cache Components Granular | Next.js 16",
-};
+export async function generateMetadata(props: {
+  params: Promise<{ lang: string }>;
+}): Promise<Metadata> {
+  const { lang } = await props.params;
+
+  return {
+    description:
+      lang === "es"
+        ? "Demo educativa de Cache Components en Next.js 16: cacheo granular, Suspense, revalidación y beneficios de performance/coste."
+        : "Educational demo of Next.js 16 Cache Components: granular caching, Suspense, revalidation, and performance/cost benefits.",
+    metadataBase: new URL(
+      process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+    ),
+    title: {
+      default:
+        lang === "es"
+          ? "Cache Components Granular | Next.js 16"
+          : "Granular Cache Components | Next.js 16",
+      template:
+        lang === "es"
+          ? "%s | Cache Components Granular"
+          : "%s | Granular Cache Components",
+    },
+  };
+}
 
 const { provider } = defineI18nUI(i18n, {
   translations: {
