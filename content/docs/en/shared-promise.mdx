@@ -1,0 +1,112 @@
+---
+title: Shared Promise Case
+description: One query, one promise and Suspense per block
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
+
+# Alternative case: Shared promise per field
+
+1. Create a single promise in the parent using `db.getProduct(id)` (without `await`)
+2. Pass that promise object down to each field component
+3. Wrap each field in its own `<Suspense>`
+4. Destructure the values inside each component: `const { stock } = await productPromise`
+
+## Demo Route
+
+- `/product/[id]/shared-promise`
+- Live example: `/product/1/shared-promise`
+
+## Implementation
+
+<Mermaid chart={`graph TD
+    Parent["ProductContent (Shared Promise)"]
+    Promise{"db.getProduct(id) [Promise]"}
+    
+    Parent --> Promise
+    Parent --> Suspense1["&lt;Suspense&gt;"]
+    Parent --> Suspense2["&lt;Suspense&gt;"]
+    Parent --> Suspense3["&lt;Suspense&gt;"]
+    
+    Suspense1 --> Text["ProductText (awaits Promise)"]
+    Suspense2 --> Price["ProductPrice (awaits Promise)"]
+    Suspense3 --> Stock["ProductStock (awaits Promise)"]
+    
+    Promise -.-> Text
+    Promise -.-> Price
+    Promise -.-> Stock
+    
+    style Promise fill:#3b82f6,stroke:#1d4ed8,color:#fff`} />
+
+```tsx title="app/product/[id]/shared-promise/_components/product-content-shared-promise.tsx"
+export async function ProductContentSharedPromise({ params }) {
+  const { id } = await params
+  const safeProductId = parseProductId(id)
+
+  // A single call / a single promise
+  const productPromise = db.getProduct(safeProductId)
+
+  return (
+    <>
+      <Suspense fallback={<ProductTextFromPromiseSkeleton />}>
+        <ProductTextFromPromise productPromise={productPromise} />
+      </Suspense>
+
+      <Suspense fallback={<ProductPriceFromPromiseSkeleton />}>
+        <ProductPriceFromPromise productPromise={productPromise} />
+      </Suspense>
+
+      <Suspense fallback={<ProductStockFromPromiseSkeleton />}>
+        <ProductStockFromPromise productPromise={productPromise} />
+      </Suspense>
+    </>
+  )
+}
+```
+
+Every block consumes the exact same promise:
+
+```tsx title="Block example"
+export async function ProductStockFromPromise({ productPromise }) {
+  // Await the promise resolution within the Suspense boundary
+  const { stock, lastChecked } = await productPromise
+  return <div>{stock} - {lastChecked}</div>
+}
+```
+
+## What you gain and what you lose
+
+<Tabs items={['Advantages', 'Trade-offs']}>
+  <Tab value="Advantages">
+
+  - ✅ Only one DB query per request fetching the entire payload
+  - ✅ Less data access logic duplication
+  - ✅ Visual granularity: each block retains its own `Suspense` boundary
+  - ✅ Useful when fields change together or a record is small enough to load entirely
+
+  </Tab>
+  <Tab value="Trade-offs">
+
+  - ⚠️ If you invalidate this resource, the entire payload is recalculated
+  - ⚠️ You lose fine-grained per-field invalidation (e.g. text/price caches separately)
+  - ⚠️ Query cost might increment if you only needed one single field
+
+  </Tab>
+</Tabs>
+
+<Callout type="info">
+There is no universally best option. This pattern prioritizes data-access simplicity + single query, while the multi-query approach prioritizes field-level cache invalidation.
+</Callout>
+
+## When to use each pattern
+
+- **Shared promise (`getProduct`)**: When you want a single query and data chunks usually travel together.
+- **Granular Multi-query**: When text/price/stock have distinct lifecycles and you want tags per field.
+
+## Validating in the demo
+
+1. Open `/product/1/shared-promise`
+2. Check your server console
+3. You should see `getProduct (all fields)` once per request in that route
+4. Compare it with `/product/1` where you will see queries separated by fields

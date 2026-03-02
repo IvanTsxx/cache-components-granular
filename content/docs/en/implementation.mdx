@@ -1,0 +1,364 @@
+---
+title: Implementation
+description: Complete step-by-step code
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
+import { Step, Steps } from 'fumadocs-ui/components/steps';
+
+# Complete Implementation
+
+<Steps>
+
+### Enable Cache Components
+
+Update `next.config.mjs`:
+
+```js title="next.config.mjs"
+const config = {
+  cacheComponents: true, // ← Enables Cache Components
+}
+
+export default config
+```
+
+<Callout type="info">
+This flag also automatically enables **Partial Prerendering (PPR)**.
+</Callout>
+
+### Generate static routes for the dynamic segment
+
+For Next.js to know which products to prerender for `/product/[id]`, add `generateStaticParams`:
+
+```tsx title="app/product/[id]/page.tsx"
+import { db } from '@/lib/db'
+
+export async function generateStaticParams() {
+  const products = await db.listProducts()
+
+  return products.map((product) => ({
+    id: product.id,
+  }))
+}
+```
+
+<Callout type="warning">
+Without `generateStaticParams`, the dynamic route still works, but you lose part of the educational value of clearly seeing which paths are prerendered at build time.
+</Callout>
+
+### Create separate queries
+
+Each field needs its own query function:
+
+```ts title="lib/db.ts"
+export const db = {
+  // Query ONLY for text
+  async getProductText(productId: string) {
+    console.log(`[DB Query] 📝 getProductText - Product ${productId}`)
+    
+    const { name, description } = await db.query(
+      'SELECT name, description FROM products WHERE id = ?',
+      [productId]
+    )
+    return { name, description }
+  },
+
+  // Query ONLY for price
+  async getProductPrice(productId: string) {
+    console.log(`[DB Query] 💰 getProductPrice - Product ${productId}`)
+    
+    const { price } = await db.query(
+      'SELECT price FROM products WHERE id = ?',
+      [productId]
+    )
+    return { price }
+  },
+
+  // Query ONLY for stock
+  async getProductStock(productId: string) {
+    console.log(`[DB Query] 📦 getProductStock - Product ${productId}`)
+    
+    const { stock } = await db.query(
+      'SELECT stock FROM products WHERE id = ?',
+      [productId]
+    )
+    return { stock, lastChecked: new Date().toISOString() }
+  },
+}
+```
+
+<Callout type="warning">
+**Why multiple queries?** Although it seems inefficient, the cached queries are executed at **build time**, not on every request.
+</Callout>
+
+### Text Component (cached)
+
+```tsx title="app/product/[id]/_components/product-text.tsx"
+async function ProductText({ productId }: { productId: string }) {
+  'use cache'
+  cacheTag(`product-text-${productId}`)
+  cacheLife('weeks') // Long cache: rarely changes
+  
+  const { name, description } = await db.getProductText(productId)
+  
+  return (
+    <Card className="border-green-200">
+      <CardHeader>
+        <div className="flex items-start justify-between">
+          <CardTitle>{name}</CardTitle>
+          <Badge className="bg-green-100 text-green-800">
+            📦 Cached 1 week
+          </Badge>
+        </div>
+        <CardDescription>{description}</CardDescription>
+      </CardHeader>
+    </Card>
+  )
+}
+```
+
+**Key takeaways:**
+- `'use cache'` marks the component as cacheable
+- `cacheTag` allows selective revalidation inside Server Actions
+- `cacheLife('weeks')` defines the duration of the cache
+- A specific query fetches only this field
+
+### Price Component (cached)
+
+```tsx title="app/product/[id]/_components/product-price.tsx"
+async function ProductPrice({ productId }: { productId: string }) {
+  'use cache'
+  cacheTag(`product-price-${productId}`)
+  cacheLife('hours') // Medium cache: changes occasionally
+  
+  const { price } = await db.getProductPrice(productId)
+  
+  return (
+    <Card className="border-blue-200">
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardDescription>Price</CardDescription>
+            <CardTitle className="text-4xl">${price.toFixed(2)}</CardTitle>
+          </div>
+          <Badge className="bg-blue-100 text-blue-800">
+            ⏱️ Cached 1 hour
+          </Badge>
+        </div>
+      </CardHeader>
+    </Card>
+  )
+}
+```
+
+### Stock Component (uncached)
+
+```tsx title="app/product/[id]/_components/product-stock.tsx"
+async function ProductStock({ productId }: { productId: string }) {
+  // No 'use cache' - always fresh
+  
+  const { stock, lastChecked } = await db.getProductStock(productId)
+  
+  return (
+    <Card className="border-amber-200">
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardDescription>Available Stock</CardDescription>
+            <CardTitle className={stock < 10 ? 'text-red-600' : ''}>
+              {stock} units
+            </CardTitle>
+            <p className="text-xs text-muted-foreground">
+              Verified: {new Date(lastChecked).toLocaleTimeString()}
+            </p>
+          </div>
+          <Badge className="bg-amber-100 text-amber-800">
+            🔄 Uncached (streaming)
+          </Badge>
+        </div>
+      </CardHeader>
+    </Card>
+  )
+}
+```
+
+<Callout type="success">
+**No `use cache`** = the component executes on every request and streams to the client.
+</Callout>
+
+### Main Page with Suspense
+
+```tsx title="app/product/[id]/page.tsx"
+import { Suspense } from 'react'
+
+// Main component - SYNC, structure only
+export default function ProductPage({
+  params,
+}: {
+  params: Promise<{ id: string }>
+}) {
+  return (
+    <div className="container mx-auto px-4 py-8 max-w-4xl">
+      <Link href="/">← Back</Link>
+      
+      {/* All dynamic content must be inside Suspense */}
+      <Suspense fallback={<ProductPageSkeleton />}>
+        <ProductContent params={params} />
+      </Suspense>
+    </div>
+  )
+}
+
+// Content - ASYNC, accesses runtime params
+async function ProductContent({
+  params,
+}: {
+  params: Promise<{ id: string }>
+}) {
+  const { id } = await params
+  
+  return (
+    <div className="space-y-6">
+      {/* Text and price: cached, included in the static shell */}
+      <ProductText productId={id} />
+      <ProductPrice productId={id} />
+      
+      {/* Stock: uncached, requires its own isolated Suspense */}
+      <Suspense fallback={<StockSkeleton />}>
+        <ProductStock productId={id} />
+      </Suspense>
+    </div>
+  )
+}
+```
+
+<Callout type="error">
+**Critical:** `params` is runtime data and must be accessed inside a Suspense boundary when Partial Prerendering is enabled.
+</Callout>
+
+### Server Actions for revalidation
+
+```ts title="app/actions.ts"
+'use server'
+
+import { revalidateTag } from 'next/cache'
+import { z } from 'zod'
+
+const productIdSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .regex(/^[a-zA-Z0-9-]+$/)
+
+function validateProductId(productId: string) {
+  return productIdSchema.parse(productId)
+}
+
+export async function revalidateProductPrice(productId: string) {
+  const safeProductId = validateProductId(productId)
+  console.log(`[Server Action] Revalidating price for ${safeProductId}`)
+  revalidateTag(`product-price-${safeProductId}`, 'max')
+  return { success: true, message: 'Price revalidated' }
+}
+
+export async function revalidateProductText(productId: string) {
+  const safeProductId = validateProductId(productId)
+  console.log(`[Server Action] Revalidating text for ${safeProductId}`)
+  revalidateTag(`product-text-${safeProductId}`, 'max')
+  return { success: true, message: 'Text revalidated' }
+}
+```
+
+</Steps>
+
+## Execution Timeline
+
+<Mermaid chart={`gantt
+    title Build and Request Timeline
+    dateFormat  s
+    axisFormat %S
+    
+    section Build Time
+    generateStaticParams   :a1, 0, 1s
+    ProductText (Query)    :a2, 1, 2s
+    ProductPrice (Query)   :a3, 1, 2s
+    Generate Static Shell  :a4, 2, 3s
+    
+    section Request Time
+    Serve Static Shell     :b1, 0, 1s
+    Show Skeleton          :b2, 0, 1s
+    ProductStock (Query)   :b3, 1, 3s
+    Stream HTML outcome    :b4, 3, 4s`} />
+
+<Callout type="info">
+During **Build Time**, text and price execute their DB queries and the results get saved in the prerender. The stock component is ignored. <br/>
+During **Request Time**, the stock executes its DB query while the user is already seeing the prerendered content (static shell).
+</Callout>
+
+## Verification
+
+### Local Development
+
+```bash
+bun dev
+```
+
+Open `http://localhost:3000` and check your server console:
+
+```
+[DB Query] 📝 getProductText - Product 1
+[DB Query] 💰 getProductPrice - Product 1
+[DB Query] 📦 getProductStock - Product 1
+```
+
+### Production Build
+
+```bash
+bun build
+bun start
+```
+
+Check the build output terminal:
+
+```
+Route (app)                    Size     First Load JS
+┌ ◐ /                          2.4 kB         170 kB
+└ ◐ /product/[id]
+
+◐  Partial Prerender  - static HTML + dynamic streaming content
+```
+
+<Callout type="success">
+If you see a `◐ Partial Prerender` indicator for `/product/[id]`, it is working correctly for this Cache Components demo.
+</Callout>
+
+## Debugging
+
+### Seeing what is cached
+
+In your browser, View Source (Ctrl+U) and look around:
+
+```html
+<!-- You should see the HTML of text and price -->
+<h1>Laptop Dell XPS 15</h1>
+<p>Potente laptop con procesador...</p>
+<div>$1,299.99</div>
+
+<!-- Stock should NOT be there, only the skeleton markup -->
+```
+
+### Useful Logs
+
+Add console logs directly inside your components:
+
+```tsx
+async function ProductPrice({ productId }) {
+  'use cache'
+  console.log(`[${new Date().toISOString()}] Rendering ProductPrice`)
+  // ...
+}
+```
+
+During build, you should see the log only once.
+At request time, you should NOT see it if it's hitting the cache successfully.

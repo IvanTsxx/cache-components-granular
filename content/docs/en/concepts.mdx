@@ -1,0 +1,309 @@
+---
+title: Key Concepts
+description: Understanding Suspense, queries and cache
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
+
+# Key Concepts
+
+## 1. Async Component = Promise
+
+The most important concept to understand:
+
+```tsx
+// This async component RETURNS a promise
+async function ProductStock({ productId }) {
+  const stock = await db.getStock(productId)
+  return <div>{stock}</div>
+}
+
+// That's why the Suspense goes in the PARENT:
+function Parent() {
+  return (
+    <Suspense fallback="Loading...">
+      <ProductStock />  {/* ← This line CREATES and EXECUTES the promise */}
+    </Suspense>
+  )
+}
+```
+
+When React renders `<ProductStock />`, it is invoking an async function, which creates a promise. The Suspense in the parent **captures** that promise.
+
+<Callout type="error">
+**Common Error:** Trying to put Suspense INSIDE the async component
+</Callout>
+
+### ❌ Incorrect
+
+```tsx
+async function ProductStock() {
+  return (
+    <Suspense>  {/* The await already happened, this does nothing */}
+      <div>{await db.query(...)}</div>
+    </Suspense>
+  )
+}
+```
+
+**Why it doesn't work:** 
+- The `await` executes BEFORE the `return`
+- When you reach the `return`, the promise is already resolved
+- The Suspense has nothing to capture
+
+### ✅ Correct
+
+```tsx
+function Parent() {
+  return (
+    <Suspense fallback="Loading...">
+      <ProductStock />  {/* Suspense captures the component execution */}
+    </Suspense>
+  )
+}
+
+async function ProductStock() {
+  const stock = await db.query(...)
+  return <div>{stock}</div>
+}
+```
+
+## 2. Multiple queries vs Cache
+
+### The common question
+
+> "Isn't it inefficient to make 3 separate queries for the same product?"
+
+**Answer:** It depends on when they are executed.
+
+<Tabs items={['Without Cache Components', 'With Cache Components']}>
+  <Tab value="Without Cache Components">
+    ### Traditional model
+    
+    ```tsx
+    // One query on every request
+    async function ProductPage({ productId }) {
+      const product = await db.query('SELECT * FROM products')
+      
+      return (
+        <div>
+          <h1>{product.name}</h1>
+          <p>${product.price}</p>
+          <p>Stock: {product.stock}</p>
+        </div>
+      )
+    }
+    ```
+    
+    **Timeline:**
+    - Request 1: Full query
+    - Request 2: Full query
+    - Request 3: Full query
+    
+    **Total:** 3 DB queries
+  </Tab>
+  
+  <Tab value="With Cache Components">
+    ### Granular model
+    
+    ```tsx
+    // 3 queries, but only 1 at request time
+    function ProductPage({ productId }) {
+      return (
+        <>
+          <ProductText productId={productId} />     {/* Build time */}
+          <ProductPrice productId={productId} />    {/* Build time */}
+          <Suspense>
+            <ProductStock productId={productId} />  {/* Request time */}
+          </Suspense>
+        </>
+      )
+    }
+    ```
+    
+    **Timeline:**
+    - Build: 2 queries (text + price)
+    - Request 1: 1 query (stock)
+    - Request 2: 1 query (stock)
+    - Request 3: 1 query (stock)
+    
+    **Total:** 2 queries at build + 3 queries at request = 5 queries
+    
+    But each request only executes 1 query, and the HTML comes pre-generated.
+  </Tab>
+</Tabs>
+
+### Conscious trade-off
+
+| Aspect | Single query | Separate queries |
+|---------|-------------|-------------------|
+| Total queries | 3 (1 per request) | 5 (2 at build + 3 at request) |
+| Queries per request | 1 full query | 1 small query (stock) |
+| Granular control | ❌ All or nothing | ✅ Per field |
+| Perceived performance | Depends on total cache | Instant HTML + streaming |
+| Complexity | Low | Medium |
+
+**Conclusion:** More total queries, but better user experience and fine-grained control.
+
+## 3. Tags for revalidation
+
+Tags allow you to invalidate cache **selectively** and **precisely**.
+
+### Without tags (traditional)
+
+```tsx
+// Invalidate the entire page
+revalidatePath('/product/1')
+
+// Invalidates the WHOLE product:
+// - Text (rarely changes)
+// - Price (the only one that changed)
+// - Stock (which already has no cache)
+```
+
+### With tags (granular)
+
+```tsx
+// Cache with unique tags
+async function ProductPrice({ productId }) {
+  'use cache'
+  cacheTag(`product-price-${productId}`)
+  // ...
+}
+
+// Invalidate only the price
+revalidateTag(`product-price-${productId}`, 'max')
+
+// The text keeps its cache ✅
+// The stock still doesn't have cache ✅
+```
+
+### Anatomy of a tag
+
+```tsx
+cacheTag(`product-price-${productId}`)
+
+// Resulting tag: "product-price-1"
+// Allows: revalidateTag('product-price-1', 'max')
+```
+
+**Advantage:** Surgical revalidation without affecting other fields.
+
+## 4. Runtime data requires Suspense
+
+Runtime data is information that only exists when a request arrives:
+
+- `params` - URL parameters
+- `searchParams` - Query strings
+- `cookies()` - User cookies
+- `headers()` - Request headers
+
+### Why they need Suspense
+
+```tsx
+// ❌ This triggers an error
+export default async function ProductPage({ params }) {
+  const { id } = await params  // Runtime data without Suspense
+  return <div>{id}</div>
+}
+
+// Error: Runtime data was accessed outside of <Suspense>
+```
+
+**Reason:** During prerendering (build time), `params` doesn't exist. Next.js requires you to explicitly mark that this content needs request context.
+
+### Solution
+
+```tsx
+// ✅ Correct
+export default function ProductPage({ params }) {
+  return (
+    <Suspense fallback={<Skeleton />}>
+      <ProductContent params={params} />  {/* params passed as prop */}
+    </Suspense>
+  )
+}
+
+async function ProductContent({ params }) {
+  const { id } = await params  {/* Now it IS inside Suspense */}
+  return <div>{id}</div>
+}
+```
+
+<Callout type="info">
+The pattern is: sync component passes runtime data as a prop to an async component inside Suspense.
+</Callout>
+
+## 5. Static shell vs Streaming
+
+### Static shell
+
+Content that is prerendered and included in the initial HTML:
+
+```tsx
+// These components with 'use cache' generate static shell
+<ProductText productId={id} />   // → Included HTML
+<ProductPrice productId={id} />  // → Included HTML
+```
+
+**Advantage:** The user sees content instantly, without waiting for queries.
+
+### Streaming
+
+Content rendered at request time that streams to the browser:
+
+```tsx
+// This component without 'use cache' streams in
+<Suspense fallback={<Skeleton />}>
+  <ProductStock productId={id} />  // → Streams in later
+</Suspense>
+```
+
+**Advantage:** Always fresh content, without blocking the initial HTML.
+
+### Visualization
+
+<Mermaid chart={`flowchart TD
+    User((User Request)) --> Server[Server]
+    Server --> Check{Prerendering check}
+    
+    Check -- "use cache components" --> Static[Static Shell]
+    Check -- "no-cache components" --> Streaming[Streaming]
+    
+    Static -- "Instant HTML" --> Browser1[Browser shows static + skeleton]
+    Streaming -- "On-demand execution" --> Browser2[Browser receives streaming]
+    
+    Browser1 --> Browser3[Streaming replaces skeleton]
+    Browser2 --> Browser3
+    Browser3 --> Final((Complete page rendered))
+    
+    style Static fill:#10b981,stroke:#047857,color:#fff
+    style Streaming fill:#f59e0b,stroke:#b45309,color:#fff`} />
+
+## 6. cacheLife profiles
+
+Predefined profiles for different types of content:
+
+```tsx
+cacheLife('default')  // General balance
+cacheLife('minutes')  // Volatile (e.g. trending topics)
+cacheLife('hours')    // Changes occasionally (e.g. prices)
+cacheLife('days')     // Changes rarely (e.g. categories)
+cacheLife('weeks')    // Very stable (e.g. legal terms)
+cacheLife('max')      // Almost never changes (e.g. historical content)
+```
+
+Or define your own profile:
+
+```tsx
+cacheLife({
+  stale: 3600,      // 1 hour until considered stale
+  revalidate: 7200, // 2 hours until background revalidation
+  expire: 86400,    // 1 day until hard expiration
+})
+```
+
+<Callout type="success">
+**Rule of thumb:** Use the longest profile acceptable for your use case. More cache = better performance.
+</Callout>

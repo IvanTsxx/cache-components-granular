@@ -1,0 +1,384 @@
+---
+title: Revalidation
+description: updateTag vs revalidateTag
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
+
+# Cache Revalidation
+
+Next.js 16 offers two ways to invalidate cache: `revalidateTag` and `updateTag`. Both work with tags but have different behaviors.
+
+## updateTag vs revalidateTag
+
+<Tabs items={['revalidateTag', 'updateTag']}>
+  <Tab value="revalidateTag">
+    ## Stale-while-revalidate
+    
+    ```ts title="app/actions.ts"
+    'use server'
+    import { revalidateTag } from 'next/cache'
+    
+    export async function revalidatePrice(productId: string) {
+      revalidateTag(`product-price-${productId}`, 'max')
+      //                                            ↑
+      //                                  Revalidation profile
+    }
+    ```
+    
+    ### Behavior
+    
+    1. **Marks the cache as "stale"** (outdated)
+    2. **Keeps serving old content** while regenerating in background
+    3. **Next request** gets the fresh content
+    
+    ### Timeline
+    
+    <Mermaid chart={`sequenceDiagram
+        participant U1 as User 1
+        participant S as Server
+        participant U2 as User 2
+        participant U3 as User 3
+    
+        Note over S: Cache (Valid)
+        U1->>S: Click "Revalidate"
+        Note over S: Cache marked STALE
+        S-->>U1: Serves old version
+    
+        U2->>S: Visit page
+        S-->>U2: Serves old version
+        Note over S: Trigger background regeneration
+        Note over S: Regeneration complete
+        Note over S: Cache (Valid)
+    
+        U3->>S: Visit page
+        S-->>U3: Serves NEW version ✨`} />
+    
+    ### Available profiles
+    
+    ```ts
+    revalidateTag('my-tag', 'max')      // Most aggressive
+    revalidateTag('my-tag', 'default')  // Balanced
+    revalidateTag('my-tag', 'min')      // Most conservative
+    
+    // Or custom
+    revalidateTag('my-tag', {
+      stale: 3600,
+      revalidate: 7200,
+      expire: 86400
+    })
+    ```
+    
+    ### Use when
+    
+    ✅ The change is not immediately critical  
+    ✅ You can tolerate old data briefly  
+    ✅ Blog posts, pricing, editorial content  
+    ✅ You want to minimize latency for users  
+    
+    ### Real-world example
+    
+    ```ts title="app/actions.ts"
+    'use server'
+    import { revalidateTag } from 'next/cache'
+    
+    // Update product price
+    export async function updateProductPrice(
+      productId: string, 
+      newPrice: number
+    ) {
+      // 1. Update DB
+      await db.query(
+        'UPDATE products SET price = ? WHERE id = ?',
+        [newPrice, productId]
+      )
+      
+      // 2. Revalidate cache (stale-while-revalidate)
+      revalidateTag(`product-price-${productId}`, 'max')
+      
+      return { success: true }
+    }
+    ```
+  </Tab>
+  
+  <Tab value="updateTag">
+    ## Immediate invalidation
+    
+    ```ts title="app/actions.ts"
+    'use server'
+    import { updateTag } from 'next/cache'
+    
+    export async function updateCartItem(userId: string) {
+      updateTag(`user-cart-${userId}`)
+      // Second argument not required or supported
+    }
+    ```
+    
+    ### Behavior
+    
+    1. **Expires the cache immediately**
+    2. **Next request regenerates** the content
+    3. **User gets fresh content** on the exact same request
+    
+    ### Timeline
+    
+    <Mermaid chart={`sequenceDiagram
+        participant U1 as User 1
+        participant S as Server
+        participant U2 as User 2
+    
+        Note over S: Cache (Valid)
+        U1->>S: Click "Add to Cart"
+        Note over S: Cache EXPIRES immediately
+        
+        U2->>S: Visit page
+        Note over S: Regenerates in request
+        S-->>U2: Serves NEW version ✨
+        Note over S: Cache (Valid)`} />
+    
+    ### Use when
+    
+    ✅ The change must be immediate  
+    ✅ You can't tolerate old data  
+    ✅ Shopping cart  
+    ✅ Likes, votes, reactions  
+    ✅ User mutations  
+    
+    ### Real-world example
+    
+    ```ts title="app/actions.ts"
+    'use server'
+    import { updateTag } from 'next/cache'
+    
+    // Add item to cart
+    export async function addToCart(
+      userId: string,
+      productId: string
+    ) {
+      // 1. Add to DB
+      await db.query(
+        'INSERT INTO cart_items (user_id, product_id) VALUES (?, ?)',
+        [userId, productId]
+      )
+      
+      // 2. Invalidate cache immediately
+      updateTag(`user-cart-${userId}`)
+      
+      return { success: true }
+    }
+    ```
+  </Tab>
+</Tabs>
+
+## Direct Comparison
+
+| Aspect | revalidateTag | updateTag |
+|---------|---------------|-----------|
+| **Behavior** | Stale-while-revalidate | Immediate invalidation |
+| **Latency** | Low (serves old first) | Medium (regenerates on request) |
+| **Consistency** | Eventual | Immediate |
+| **Performance** | Better | Good |
+| **Use Case** | Editorial content | User mutations |
+| **Second Arg** | Yes (profile) | No |
+
+## Use cases examples
+
+### Blog / Editorial content
+
+```ts title="app/actions.ts"
+'use server'
+import { revalidateTag } from 'next/cache'
+
+export async function publishBlogPost(postId: string) {
+  await db.query('UPDATE posts SET published = true WHERE id = ?', [postId])
+  
+  // Stale-while-revalidate: OK if some viewers see the old version briefly
+  revalidateTag(`blog-post-${postId}`, 'max')
+  revalidateTag('blog-list', 'max')
+}
+```
+
+### E-commerce / Cart
+
+```ts title="app/actions.ts"
+'use server'
+import { updateTag } from 'next/cache'
+
+export async function addToCart(userId: string, productId: string) {
+  await db.query(
+    'INSERT INTO cart_items (user_id, product_id) VALUES (?, ?)',
+    [userId, productId]
+  )
+  
+  // Immediate Invalidaton: Users MUST see their cart updated right away
+  updateTag(`user-cart-${userId}`)
+}
+```
+
+### Likes System
+
+```ts title="app/actions.ts"
+'use server'
+import { updateTag } from 'next/cache'
+
+export async function likePost(userId: string, postId: string) {
+  await db.query(
+    'INSERT INTO likes (user_id, post_id) VALUES (?, ?)',
+    [userId, postId]
+  )
+  
+  // Immediate Invalidaton: Users expect their like to bounce instantly
+  updateTag(`post-likes-${postId}`)
+  updateTag(`user-liked-posts-${userId}`)
+}
+```
+
+### Product prices
+
+```ts title="app/actions.ts"
+'use server'
+import { revalidateTag } from 'next/cache'
+
+export async function updatePrice(productId: string, newPrice: number) {
+  await db.query(
+    'UPDATE products SET price = ? WHERE id = ?',
+    [newPrice, productId]
+  )
+  
+  // Stale-while-revalidate: Acceptable if the price update takes a little while to spread
+  revalidateTag(`product-price-${productId}`, 'max')
+}
+```
+
+## Revalidating multiple tags
+
+Both functions can be invoked multiple times:
+
+```ts title="app/actions.ts"
+'use server'
+import { revalidateTag, updateTag } from 'next/cache'
+
+export async function updateProduct(productId: string, data: ProductData) {
+  await db.query('UPDATE products SET ... WHERE id = ?', [productId])
+  
+  // Combining both approaches where needed
+  revalidateTag(`product-text-${productId}`, 'max')    // Text: stale-while-revalidate
+  revalidateTag(`product-price-${productId}`, 'max')   // Price: stale-while-revalidate
+  updateTag(`product-inventory-${productId}`)          // Inventory: immediate
+}
+```
+
+## revalidatePath vs Tags
+
+### revalidatePath (Traditional)
+
+```ts
+revalidatePath('/product/1')
+```
+
+**Invalidates:** The entire route `/product/1`
+
+**Issue:** You can't invalidate specific fields inside it.
+
+### Tags (Granular)
+
+```ts
+revalidateTag('product-price-1', 'max')
+```
+
+**Invalidates:** Just the cache tagged with `product-price-1`
+
+**Advantage:** Surgical precision, doesn't affect other fields
+
+<Callout type="success">
+**Rule of thumb:** Use tags for granular control. Only use `revalidatePath` when you want to literally invalidate a whole page.
+</Callout>
+
+## Debugging Revalidation
+
+### Useful Logs
+
+```ts title="app/actions.ts"
+'use server'
+import { revalidateTag } from 'next/cache'
+
+export async function revalidatePrice(productId: string) {
+  console.log(`[Revalidation] product-price-${productId} at ${new Date().toISOString()}`)
+  revalidateTag(`product-price-${productId}`, 'max')
+}
+```
+
+### Verification in browser
+
+1. Click on "Revalidate"
+2. Refresh the page
+3. View Source (Ctrl+U)
+4. Confirm the updated content exists in the raw HTML string
+
+If the raw HTML changed, the background revalidation succeeded.
+
+### Response Headers
+
+Next.js provides useful headers locally:
+
+```
+x-nextjs-cache: HIT | MISS | STALE
+```
+
+- `HIT` - Served entirely from the static shell cache
+- `MISS` - Content regenerated
+- `STALE` - Stale-while-revalidate regen in progress
+
+## Best Practices
+
+### 1. Match the approach
+
+```ts
+// ✅ Editorial content
+revalidateTag('blog-post', 'max')
+
+// ✅ User actions
+updateTag('user-cart')
+```
+
+### 2. Descriptive tags
+
+```ts
+// ✅ Good
+cacheTag(`product-price-${productId}`)
+cacheTag(`user-profile-${userId}`)
+
+// ❌ Bad
+cacheTag('data', id)
+cacheTag('cache1', value)
+```
+
+### 3. Revalidate interrelated tags
+
+```ts
+// Updating a product -> revalidate all its variations
+revalidateTag(`product-${productId}`, 'max')
+revalidateTag('product-list', 'max')
+revalidateTag(`category-${categoryId}`, 'max')
+```
+
+### 4. Batch Operations
+
+```ts
+// Using transactions and batch revalidations
+export async function updateMultipleProducts(productIds: string[]) {
+  await db.transaction(async (tx) => {
+    // Transactional db updates
+  })
+  
+  // Revalidate them all together without blocking loop
+  productIds.forEach(id => {
+    revalidateTag(`product-${id}`, 'max')
+  })
+}
+```
+
+<Callout type="warning">
+**Performance Tip:** Too many simultaneous revalidations can spike load. Use deliberately.
+</Callout>
