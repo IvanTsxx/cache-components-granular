@@ -4,6 +4,14 @@ import { createMDX } from "fumadocs-mdx/next";
 const config = {
   cacheComponents: true,
   reactStrictMode: true,
+  rewrites() {
+    return [
+      {
+        destination: "/llms.mdx/docs/:path*",
+        source: "/docs/:path*.mdx",
+      },
+    ];
+  },
   typedRoutes: true,
 };
 

@@ -1,0 +1,8 @@
+{
+  "ignore": [
+    "source.config.ts",
+    "components/**",
+    "lib/validators/product.ts",
+    "lib/db.ts"
+  ]
+}

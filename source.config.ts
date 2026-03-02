@@ -8,6 +8,11 @@ const feedbackOptions: RemarkFeedbackBlockOptions = {
 
 export const docs = defineDocs({
   dir: "content/docs",
+  docs: {
+    postprocess: {
+      includeProcessedMarkdown: true,
+    },
+  },
 });
 
 export default defineConfig({

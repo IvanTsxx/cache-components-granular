@@ -9,9 +9,13 @@ import {
   DocsPage,
   DocsTitle,
 } from "@/components/layout/notebook/page";
+import { LLMCopyButton, ViewOptions } from "@/components/page-actions";
 import { onPageFeedbackAction } from "@/lib/github";
 import { source } from "@/lib/source";
 import { getMDXComponents } from "@/mdx-components";
+
+const owner = "IvanTsxx";
+const repo = "cache-components-granular";
 
 export default async function Page(
   props: PageProps<"/[lang]/docs/[[...slug]]">
@@ -26,6 +30,17 @@ export default async function Page(
 
   return (
     <DocsPage toc={page.data.toc} full={page.data.full}>
+      <div className="flex flex-row gap-2 items-center border-b pt-2 pb-6">
+        <LLMCopyButton
+          markdownUrl={page.url.replace("/docs", "/llms.mdx/docs")}
+          lang={params.lang}
+        />
+        <ViewOptions
+          markdownUrl={page.url.replace("/docs", "/llms.mdx/docs")}
+          githubUrl={`https://github.com/${owner}/${repo}/blob/dev/apps/docs/content/docs/${page.path}`}
+          lang={params.lang}
+        />
+      </div>
       <DocsTitle>{page.data.title}</DocsTitle>
       <DocsDescription>{page.data.description}</DocsDescription>
       <DocsBody>
