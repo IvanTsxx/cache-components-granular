@@ -175,7 +175,7 @@ export function AISearchInput(props: ComponentProps<"form">) {
 
   useEffect(() => {
     if (isLoading) {
-      document.querySelector("#nd-ai-input")?.focus();
+      (document.querySelector("#nd-ai-input") as HTMLTextAreaElement)?.focus();
     }
   }, [isLoading]);
 
@@ -286,8 +286,8 @@ function List(props: Omit<ComponentProps<"div">, "dir">) {
 }
 
 const roleName: Record<string, string> = {
-  assistant: "fumadocs",
-  user: "you",
+  assistant: "AI Assistant",
+  user: "You",
 };
 
 function Message({

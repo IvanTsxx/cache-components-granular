@@ -1,6 +1,7 @@
 // oxlint-disable prefer-template
 import { google } from "@ai-sdk/google";
 import { convertToModelMessages, streamText } from "ai";
+import { z } from "zod";
 
 import { ProvideLinksToolSchema } from "@/lib/inkeep-qa-schema";
 
@@ -39,30 +40,20 @@ export async function POST(req: Request) {
   const currentLang =
     req.headers.get("x-current-lang") || reqJson.currentLang || "es";
 
-  let pageContext = "";
-  if (currentPageUrl) {
-    pageContext = await getCurrentPageContext(currentPageUrl, currentLang);
-    console.log("pageContext", pageContext);
-  }
-
   // Crear mensaje del sistema
   const systemMessage = {
     content: `Eres un asistente de IA especializado en responder preguntas sobre el contenido de esta web, que es una demostracion sobre como se usa Cache Components de Next.js.
-${
-  pageContext
-    ? `CONTEXTO DE LA PÁGINA ACTUAL:
-${pageContext}
-
-Responde basándote principalmente en el contenido de esta página. Si la pregunta está relacionada con el contenido mostrado, úsalo como referencia principal.`
-    : "No hay contexto específico de página disponible."
-}
+Tienes a tu disposición una herramienta llamada "getPageContext" que te permite obtener el contenido de la página actual en la que se encuentra el usuario.
+Úsala siempre que la pregunta del usuario parezca estar relacionada con el contenido de la página o si necesitas más contexto para responder adecuadamente.
 
 INSTRUCCIONES:
-- Prioriza la información del contexto de la página actual
-- Proporciona ejemplos de código cuando sea relevante
-- Si necesitas información de otras páginas, indícalo claramente
-- Mantén tus respuestas precisas y útiles
-- Si la pregunta no está relacionada con el contenido de la página, puedes responder de manera general sobre Fumadocs`,
+- Llama a la herramienta getPageContext si necesitas saber de qué trata la página actual.
+- Proporciona la pagina actual que es ${currentPageUrl} y el idioma que es ${currentLang}.
+- Prioriza la información del contexto de la página actual si está disponible.
+- Proporciona ejemplos de código cuando sea relevante.
+- Si necesitas información de otras páginas, indícalo claramente.
+- Mantén tus respuestas precisas y útiles.
+- Si la pregunta no está relacionada con el contenido de la página o del sitio web, puedes responder de manera general.`,
     role: "system" as const,
   };
 
@@ -71,10 +62,34 @@ INSTRUCCIONES:
       ignoreIncompleteToolCalls: true,
     }),
     model,
-    system: systemMessage,
-    temperature: 0.3,
-    toolChoice: "auto",
+    system: systemMessage.content,
     tools: {
+      getPageContext: {
+        description:
+          "Obtiene el contexto de la página actual en la que se encuentra el usuario. Úsala cuando necesites saber qué está viendo el usuario para responder a su pregunta.",
+        execute: async ({ pageUrl, locale }) => {
+          const context = await getCurrentPageContext(pageUrl, locale);
+          return context || "No se pudo obtener el contexto de la página.";
+        },
+        inputExamples: [
+          {
+            input: {
+              locale: "es",
+              pageUrl: "/revalidation",
+            },
+          },
+          {
+            input: {
+              locale: "en",
+              pageUrl: "/implementation",
+            },
+          },
+        ],
+        inputSchema: z.object({
+          locale: z.string(),
+          pageUrl: z.string(),
+        }),
+      },
       provideLinks: {
         inputSchema: ProvideLinksToolSchema,
       },
