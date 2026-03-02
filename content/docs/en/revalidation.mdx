@@ -3,8 +3,8 @@ title: Revalidation
 description: updateTag vs revalidateTag
 ---
 
-import { Callout } from 'fumadocs-ui/components/callout';
-import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
+import { Callout } from "fumadocs-ui/components/callout";
+import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 
 # Cache Revalidation
 
@@ -173,81 +173,81 @@ Next.js 16 offers two ways to invalidate cache: `revalidateTag` and `updateTag`.
 
 ## Direct Comparison
 
-| Aspect | revalidateTag | updateTag |
-|---------|---------------|-----------|
-| **Behavior** | Stale-while-revalidate | Immediate invalidation |
-| **Latency** | Low (serves old first) | Medium (regenerates on request) |
-| **Consistency** | Eventual | Immediate |
-| **Performance** | Better | Good |
-| **Use Case** | Editorial content | User mutations |
-| **Second Arg** | Yes (profile) | No |
+| Aspect          | revalidateTag          | updateTag                       |
+| --------------- | ---------------------- | ------------------------------- |
+| **Behavior**    | Stale-while-revalidate | Immediate invalidation          |
+| **Latency**     | Low (serves old first) | Medium (regenerates on request) |
+| **Consistency** | Eventual               | Immediate                       |
+| **Performance** | Better                 | Good                            |
+| **Use Case**    | Editorial content      | User mutations                  |
+| **Second Arg**  | Yes (profile)          | No                              |
 
 ## Use cases examples
 
 ### Blog / Editorial content
 
 ```ts title="app/actions.ts"
-'use server'
-import { revalidateTag } from 'next/cache'
+"use server";
+import { revalidateTag } from "next/cache";
 
 export async function publishBlogPost(postId: string) {
-  await db.query('UPDATE posts SET published = true WHERE id = ?', [postId])
-  
+  await db.query("UPDATE posts SET published = true WHERE id = ?", [postId]);
+
   // Stale-while-revalidate: OK if some viewers see the old version briefly
-  revalidateTag(`blog-post-${postId}`, 'max')
-  revalidateTag('blog-list', 'max')
+  revalidateTag(`blog-post-${postId}`, "max");
+  revalidateTag("blog-list", "max");
 }
 ```
 
 ### E-commerce / Cart
 
 ```ts title="app/actions.ts"
-'use server'
-import { updateTag } from 'next/cache'
+"use server";
+import { updateTag } from "next/cache";
 
 export async function addToCart(userId: string, productId: string) {
-  await db.query(
-    'INSERT INTO cart_items (user_id, product_id) VALUES (?, ?)',
-    [userId, productId]
-  )
-  
+  await db.query("INSERT INTO cart_items (user_id, product_id) VALUES (?, ?)", [
+    userId,
+    productId,
+  ]);
+
   // Immediate Invalidaton: Users MUST see their cart updated right away
-  updateTag(`user-cart-${userId}`)
+  updateTag(`user-cart-${userId}`);
 }
 ```
 
 ### Likes System
 
 ```ts title="app/actions.ts"
-'use server'
-import { updateTag } from 'next/cache'
+"use server";
+import { updateTag } from "next/cache";
 
 export async function likePost(userId: string, postId: string) {
-  await db.query(
-    'INSERT INTO likes (user_id, post_id) VALUES (?, ?)',
-    [userId, postId]
-  )
-  
+  await db.query("INSERT INTO likes (user_id, post_id) VALUES (?, ?)", [
+    userId,
+    postId,
+  ]);
+
   // Immediate Invalidaton: Users expect their like to bounce instantly
-  updateTag(`post-likes-${postId}`)
-  updateTag(`user-liked-posts-${userId}`)
+  updateTag(`post-likes-${postId}`);
+  updateTag(`user-liked-posts-${userId}`);
 }
 ```
 
 ### Product prices
 
 ```ts title="app/actions.ts"
-'use server'
-import { revalidateTag } from 'next/cache'
+"use server";
+import { revalidateTag } from "next/cache";
 
 export async function updatePrice(productId: string, newPrice: number) {
-  await db.query(
-    'UPDATE products SET price = ? WHERE id = ?',
-    [newPrice, productId]
-  )
-  
+  await db.query("UPDATE products SET price = ? WHERE id = ?", [
+    newPrice,
+    productId,
+  ]);
+
   // Stale-while-revalidate: Acceptable if the price update takes a little while to spread
-  revalidateTag(`product-price-${productId}`, 'max')
+  revalidateTag(`product-price-${productId}`, "max");
 }
 ```
 
@@ -256,16 +256,16 @@ export async function updatePrice(productId: string, newPrice: number) {
 Both functions can be invoked multiple times:
 
 ```ts title="app/actions.ts"
-'use server'
-import { revalidateTag, updateTag } from 'next/cache'
+"use server";
+import { revalidateTag, updateTag } from "next/cache";
 
 export async function updateProduct(productId: string, data: ProductData) {
-  await db.query('UPDATE products SET ... WHERE id = ?', [productId])
-  
+  await db.query("UPDATE products SET ... WHERE id = ?", [productId]);
+
   // Combining both approaches where needed
-  revalidateTag(`product-text-${productId}`, 'max')    // Text: stale-while-revalidate
-  revalidateTag(`product-price-${productId}`, 'max')   // Price: stale-while-revalidate
-  updateTag(`product-inventory-${productId}`)          // Inventory: immediate
+  revalidateTag(`product-text-${productId}`, "max"); // Text: stale-while-revalidate
+  revalidateTag(`product-price-${productId}`, "max"); // Price: stale-while-revalidate
+  updateTag(`product-inventory-${productId}`); // Inventory: immediate
 }
 ```
 
@@ -274,7 +274,7 @@ export async function updateProduct(productId: string, data: ProductData) {
 ### revalidatePath (Traditional)
 
 ```ts
-revalidatePath('/product/1')
+revalidatePath("/product/1");
 ```
 
 **Invalidates:** The entire route `/product/1`
@@ -284,7 +284,7 @@ revalidatePath('/product/1')
 ### Tags (Granular)
 
 ```ts
-revalidateTag('product-price-1', 'max')
+revalidateTag("product-price-1", "max");
 ```
 
 **Invalidates:** Just the cache tagged with `product-price-1`
@@ -292,7 +292,8 @@ revalidateTag('product-price-1', 'max')
 **Advantage:** Surgical precision, doesn't affect other fields
 
 <Callout type="success">
-**Rule of thumb:** Use tags for granular control. Only use `revalidatePath` when you want to literally invalidate a whole page.
+  **Rule of thumb:** Use tags for granular control. Only use `revalidatePath`
+  when you want to literally invalidate a whole page.
 </Callout>
 
 ## Debugging Revalidation
@@ -300,12 +301,14 @@ revalidateTag('product-price-1', 'max')
 ### Useful Logs
 
 ```ts title="app/actions.ts"
-'use server'
-import { revalidateTag } from 'next/cache'
+"use server";
+import { revalidateTag } from "next/cache";
 
 export async function revalidatePrice(productId: string) {
-  console.log(`[Revalidation] product-price-${productId} at ${new Date().toISOString()}`)
-  revalidateTag(`product-price-${productId}`, 'max')
+  console.log(
+    `[Revalidation] product-price-${productId} at ${new Date().toISOString()}`
+  );
+  revalidateTag(`product-price-${productId}`, "max");
 }
 ```
 
@@ -336,31 +339,31 @@ x-nextjs-cache: HIT | MISS | STALE
 
 ```ts
 // ✅ Editorial content
-revalidateTag('blog-post', 'max')
+revalidateTag("blog-post", "max");
 
 // ✅ User actions
-updateTag('user-cart')
+updateTag("user-cart");
 ```
 
 ### 2. Descriptive tags
 
 ```ts
 // ✅ Good
-cacheTag(`product-price-${productId}`)
-cacheTag(`user-profile-${userId}`)
+cacheTag(`product-price-${productId}`);
+cacheTag(`user-profile-${userId}`);
 
 // ❌ Bad
-cacheTag('data', id)
-cacheTag('cache1', value)
+cacheTag("data", id);
+cacheTag("cache1", value);
 ```
 
 ### 3. Revalidate interrelated tags
 
 ```ts
 // Updating a product -> revalidate all its variations
-revalidateTag(`product-${productId}`, 'max')
-revalidateTag('product-list', 'max')
-revalidateTag(`category-${categoryId}`, 'max')
+revalidateTag(`product-${productId}`, "max");
+revalidateTag("product-list", "max");
+revalidateTag(`category-${categoryId}`, "max");
 ```
 
 ### 4. Batch Operations
@@ -370,15 +373,16 @@ revalidateTag(`category-${categoryId}`, 'max')
 export async function updateMultipleProducts(productIds: string[]) {
   await db.transaction(async (tx) => {
     // Transactional db updates
-  })
-  
+  });
+
   // Revalidate them all together without blocking loop
-  productIds.forEach(id => {
-    revalidateTag(`product-${id}`, 'max')
-  })
+  productIds.forEach((id) => {
+    revalidateTag(`product-${id}`, "max");
+  });
 }
 ```
 
 <Callout type="warning">
-**Performance Tip:** Too many simultaneous revalidations can spike load. Use deliberately.
+  **Performance Tip:** Too many simultaneous revalidations can spike load. Use
+  deliberately.
 </Callout>

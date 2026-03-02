@@ -48,3 +48,6 @@ next-env.d.ts
 .kiro
 .trae
 .windsurf
+
+# generated content
+.source

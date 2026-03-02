@@ -1,33 +1,38 @@
-'use client';
-import type { ComponentProps } from 'react';
-import { Search } from 'lucide-react';
-import { useSearchContext } from 'fumadocs-ui/contexts/search';
-import { useI18n } from 'fumadocs-ui/contexts/i18n';
-import { cn } from '../../lib/cn';
-import { type ButtonProps, buttonVariants } from '../ui/button';
+"use client";
+import { useI18n } from "fumadocs-ui/contexts/i18n";
+import { useSearchContext } from "fumadocs-ui/contexts/search";
+import { Search } from "lucide-react";
+import type { ComponentProps } from "react";
 
-interface SearchToggleProps extends Omit<ComponentProps<'button'>, 'color'>, ButtonProps {
+import { buttonVariants } from "@/components/ui/button";
+import type { ButtonProps } from "@/components/ui/button";
+import { cn } from "@/lib/cn";
+
+interface SearchToggleProps
+  extends Omit<ComponentProps<"button">, "color">, ButtonProps {
   hideIfDisabled?: boolean;
 }
 
 export function SearchToggle({
   hideIfDisabled,
-  size = 'icon-sm',
-  color = 'ghost',
+  size = "icon-sm",
+  color = "ghost",
   ...props
 }: SearchToggleProps) {
   const { setOpenSearch, enabled } = useSearchContext();
-  if (hideIfDisabled && !enabled) return null;
+  if (hideIfDisabled && !enabled) {
+    return null;
+  }
 
   return (
     <button
       type="button"
       className={cn(
         buttonVariants({
-          size,
           color,
+          size,
         }),
-        props.className,
+        props.className
       )}
       data-search=""
       aria-label="Open Search"
@@ -43,12 +48,14 @@ export function SearchToggle({
 export function LargeSearchToggle({
   hideIfDisabled,
   ...props
-}: ComponentProps<'button'> & {
+}: ComponentProps<"button"> & {
   hideIfDisabled?: boolean;
 }) {
   const { enabled, hotKey, setOpenSearch } = useSearchContext();
   const { text } = useI18n();
-  if (hideIfDisabled && !enabled) return null;
+  if (hideIfDisabled && !enabled) {
+    return null;
+  }
 
   return (
     <button
@@ -56,8 +63,8 @@ export function LargeSearchToggle({
       data-search-full=""
       {...props}
       className={cn(
-        'inline-flex items-center gap-2 rounded-lg border bg-fd-secondary/50 p-1.5 ps-2 text-sm text-fd-muted-foreground transition-colors hover:bg-fd-accent hover:text-fd-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fd-ring',
-        props.className,
+        "inline-flex items-center gap-2 rounded-lg border bg-fd-secondary/50 p-1.5 ps-2 text-sm text-fd-muted-foreground transition-colors hover:bg-fd-accent hover:text-fd-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fd-ring",
+        props.className
       )}
       onClick={() => {
         setOpenSearch(true);

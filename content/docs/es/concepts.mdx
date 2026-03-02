@@ -3,8 +3,8 @@ title: Conceptos Clave
 description: Entendiendo Suspense, queries y cache
 ---
 
-import { Callout } from 'fumadocs-ui/components/callout';
-import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
+import { Callout } from "fumadocs-ui/components/callout";
+import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 
 # Conceptos Clave
 
@@ -15,24 +15,24 @@ El concepto más importante para entender:
 ```tsx
 // Este componente async RETORNA una promesa
 async function ProductStock({ productId }) {
-  const stock = await db.getStock(productId)
-  return <div>{stock}</div>
+  const stock = await db.getStock(productId);
+  return <div>{stock}</div>;
 }
 
 // Por eso el Suspense va en el PADRE:
 function Parent() {
   return (
     <Suspense fallback="Loading...">
-      <ProductStock />  {/* ← Esta línea CREA y EJECUTA la promesa */}
+      <ProductStock /> {/* ← Esta línea CREA y EJECUTA la promesa */}
     </Suspense>
-  )
+  );
 }
 ```
 
 Cuando React renderiza `<ProductStock />`, está invocando una función async, lo cual crea una promesa. El Suspense en el padre **captura** esa promesa.
 
 <Callout type="error">
-**Error común:** Intentar poner Suspense DENTRO del componente async
+  **Error común:** Intentar poner Suspense DENTRO del componente async
 </Callout>
 
 ### ❌ Incorrecto
@@ -47,7 +47,8 @@ async function ProductStock() {
 }
 ```
 
-**Por qué no funciona:** 
+**Por qué no funciona:**
+
 - El `await` se ejecuta ANTES del `return`
 - Cuando llegas al `return`, la promesa ya se resolvió
 - El Suspense no tiene nada que capturar
@@ -136,13 +137,13 @@ async function ProductStock() {
 
 ### Trade-off consciente
 
-| Aspecto | Query única | Queries separadas |
-|---------|-------------|-------------------|
-| Queries totales | 3 (1 por request) | 5 (2 en build + 3 en request) |
-| Queries por request | 1 query completa | 1 query pequeña (stock) |
-| Control granular | ❌ Todo o nada | ✅ Por campo |
-| Performance percibida | Depende del cache total | HTML instantáneo + streaming |
-| Complejidad | Baja | Media |
+| Aspecto               | Query única             | Queries separadas             |
+| --------------------- | ----------------------- | ----------------------------- |
+| Queries totales       | 3 (1 por request)       | 5 (2 en build + 3 en request) |
+| Queries por request   | 1 query completa        | 1 query pequeña (stock)       |
+| Control granular      | ❌ Todo o nada          | ✅ Por campo                  |
+| Performance percibida | Depende del cache total | HTML instantáneo + streaming  |
+| Complejidad           | Baja                    | Media                         |
 
 **Conclusión:** Más queries totales, pero mejor experiencia de usuario y control fino.
 
@@ -154,7 +155,7 @@ Los tags permiten invalidar cache de forma **selectiva** y **precisa**.
 
 ```tsx
 // Invalidar toda la página
-revalidatePath('/product/1')
+revalidatePath("/product/1");
 
 // Invalida TODO el producto:
 // - Texto (que rara vez cambia)
@@ -167,13 +168,13 @@ revalidatePath('/product/1')
 ```tsx
 // Cachear con tags únicos
 async function ProductPrice({ productId }) {
-  'use cache'
-  cacheTag(`product-price-${productId}`)
+  "use cache";
+  cacheTag(`product-price-${productId}`);
   // ...
 }
 
 // Invalidar solo el precio
-revalidateTag(`product-price-${productId}`, 'max')
+revalidateTag(`product-price-${productId}`, "max");
 
 // El texto mantiene su cache ✅
 // El stock ya no tiene cache ✅
@@ -182,7 +183,7 @@ revalidateTag(`product-price-${productId}`, 'max')
 ### Anatomía de un tag
 
 ```tsx
-cacheTag(`product-price-${productId}`)
+cacheTag(`product-price-${productId}`);
 
 // Tag final: "product-price-1"
 // Permite: revalidateTag('product-price-1', 'max')
@@ -204,8 +205,8 @@ Runtime data es información que solo existe cuando llega una request:
 ```tsx
 // ❌ Esto da error
 export default async function ProductPage({ params }) {
-  const { id } = await params  // Runtime data sin Suspense
-  return <div>{id}</div>
+  const { id } = await params; // Runtime data sin Suspense
+  return <div>{id}</div>;
 }
 
 // Error: Runtime data was accessed outside of <Suspense>
@@ -232,7 +233,8 @@ async function ProductContent({ params }) {
 ```
 
 <Callout type="info">
-El patrón es: componente sync pasa runtime data como prop a componente async dentro de Suspense.
+  El patrón es: componente sync pasa runtime data como prop a componente async
+  dentro de Suspense.
 </Callout>
 
 ## 5. Static shell vs Streaming
@@ -256,7 +258,7 @@ Contenido que se renderiza en request time y hace streaming al browser:
 ```tsx
 // Este componente sin 'use cache' hace streaming
 <Suspense fallback={<Skeleton />}>
-  <ProductStock productId={id} />  // → Streaming después
+  <ProductStock productId={id} /> // → Streaming después
 </Suspense>
 ```
 
@@ -264,7 +266,8 @@ Contenido que se renderiza en request time y hace streaming al browser:
 
 ### Visualización
 
-<Mermaid chart={`flowchart TD
+<Mermaid
+  chart={`flowchart TD
     User((User Request)) --> Server[Server]
     Server --> Check{Prerendering check}
     
@@ -279,31 +282,33 @@ Contenido que se renderiza en request time y hace streaming al browser:
     Browser3 --> Final((Complete page rendered))
     
     style Static fill:#10b981,stroke:#047857,color:#fff
-    style Streaming fill:#f59e0b,stroke:#b45309,color:#fff`} />
+    style Streaming fill:#f59e0b,stroke:#b45309,color:#fff`}
+/>
 
 ## 6. cacheLife profiles
 
 Perfiles predefinidos para diferentes tipos de contenido:
 
 ```tsx
-cacheLife('default')  // Balance general
-cacheLife('minutes')  // Volátil (ej: trending topics)
-cacheLife('hours')    // Cambia ocasionalmente (ej: precios)
-cacheLife('days')     // Cambia raramente (ej: categorías)
-cacheLife('weeks')    // Muy estable (ej: términos legales)
-cacheLife('max')      // Casi nunca cambia (ej: contenido histórico)
+cacheLife("default"); // Balance general
+cacheLife("minutes"); // Volátil (ej: trending topics)
+cacheLife("hours"); // Cambia ocasionalmente (ej: precios)
+cacheLife("days"); // Cambia raramente (ej: categorías)
+cacheLife("weeks"); // Muy estable (ej: términos legales)
+cacheLife("max"); // Casi nunca cambia (ej: contenido histórico)
 ```
 
 O define tu propio perfil:
 
 ```tsx
 cacheLife({
-  stale: 3600,      // 1 hora hasta considerarse stale
+  stale: 3600, // 1 hora hasta considerarse stale
   revalidate: 7200, // 2 horas hasta revalidar
-  expire: 86400,    // 1 día hasta expirar completamente
-})
+  expire: 86400, // 1 día hasta expirar completamente
+});
 ```
 
 <Callout type="success">
-**Regla práctica:** Usa el perfil más largo que sea aceptable para tu caso de uso. Más cache = mejor performance.
+  **Regla práctica:** Usa el perfil más largo que sea aceptable para tu caso de
+  uso. Más cache = mejor performance.
 </Callout>

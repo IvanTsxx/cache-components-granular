@@ -3,9 +3,9 @@ title: Implementación
 description: Código completo paso a paso
 ---
 
-import { Callout } from 'fumadocs-ui/components/callout';
-import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
-import { Step, Steps } from 'fumadocs-ui/components/steps';
+import { Callout } from "fumadocs-ui/components/callout";
+import { Tab, Tabs } from "fumadocs-ui/components/tabs";
+import { Step, Steps } from "fumadocs-ui/components/steps";
 
 # Implementación Completa
 
@@ -18,13 +18,13 @@ Actualiza `next.config.mjs`:
 ```js title="next.config.mjs"
 const config = {
   cacheComponents: true, // ← Habilita Cache Components
-}
+};
 
-export default config
+export default config;
 ```
 
 <Callout type="info">
-Este flag habilita **Partial Prerendering (PPR)** automáticamente.
+  Este flag habilita **Partial Prerendering (PPR)** automáticamente.
 </Callout>
 
 ### Generar rutas estáticas del segmento dinámico
@@ -32,19 +32,20 @@ Este flag habilita **Partial Prerendering (PPR)** automáticamente.
 Para que Next.js conozca qué productos prerenderizar para `/product/[id]`, agrega `generateStaticParams`:
 
 ```tsx title="app/product/[id]/page.tsx"
-import { db } from '@/lib/db'
+import { db } from "@/lib/db";
 
 export async function generateStaticParams() {
-  const products = await db.listProducts()
+  const products = await db.listProducts();
 
   return products.map((product) => ({
     id: product.id,
-  }))
+  }));
 }
 ```
 
 <Callout type="warning">
-Sin `generateStaticParams`, la ruta dinámica sigue funcionando, pero pierdes parte del valor educativo de ver claramente qué paths se prerenderizan.
+  Sin `generateStaticParams`, la ruta dinámica sigue funcionando, pero pierdes
+  parte del valor educativo de ver claramente qué paths se prerenderizan.
 </Callout>
 
 ### Crear queries separadas
@@ -55,53 +56,54 @@ Cada campo necesita su propia query:
 export const db = {
   // Query SOLO para texto
   async getProductText(productId: string) {
-    console.log(`[DB Query] 📝 getProductText - Product ${productId}`)
-    
+    console.log(`[DB Query] 📝 getProductText - Product ${productId}`);
+
     const { name, description } = await db.query(
-      'SELECT name, description FROM products WHERE id = ?',
+      "SELECT name, description FROM products WHERE id = ?",
       [productId]
-    )
-    return { name, description }
+    );
+    return { name, description };
   },
 
   // Query SOLO para precio
   async getProductPrice(productId: string) {
-    console.log(`[DB Query] 💰 getProductPrice - Product ${productId}`)
-    
+    console.log(`[DB Query] 💰 getProductPrice - Product ${productId}`);
+
     const { price } = await db.query(
-      'SELECT price FROM products WHERE id = ?',
+      "SELECT price FROM products WHERE id = ?",
       [productId]
-    )
-    return { price }
+    );
+    return { price };
   },
 
   // Query SOLO para stock
   async getProductStock(productId: string) {
-    console.log(`[DB Query] 📦 getProductStock - Product ${productId}`)
-    
+    console.log(`[DB Query] 📦 getProductStock - Product ${productId}`);
+
     const { stock } = await db.query(
-      'SELECT stock FROM products WHERE id = ?',
+      "SELECT stock FROM products WHERE id = ?",
       [productId]
-    )
-    return { stock, lastChecked: new Date().toISOString() }
+    );
+    return { stock, lastChecked: new Date().toISOString() };
   },
-}
+};
 ```
 
 <Callout type="warning">
-**¿Por qué múltiples queries?** Aunque parece ineficiente, las queries cacheadas se ejecutan en **build time**, no en cada request.
+  **¿Por qué múltiples queries?** Aunque parece ineficiente, las queries
+  cacheadas se ejecutan en **build time**, no en cada request.
 </Callout>
 
 ### Componente de texto (cacheado)
 
 ```tsx title="app/product/[id]/_components/product-text.tsx"
 async function ProductText({ productId }: { productId: string }) {
-  'use cache'
-  cacheTag(`product-text-${productId}`)
-  cacheLife('weeks') // Cache largo: rara vez cambia
-  
-  const { name, description } = await db.getProductText(productId)
-  
+  "use cache";
+  cacheTag(`product-text-${productId}`);
+  cacheLife("weeks"); // Cache largo: rara vez cambia
+
+  const { name, description } = await db.getProductText(productId);
+
   return (
     <Card className="border-green-200">
       <CardHeader>
@@ -114,11 +116,12 @@ async function ProductText({ productId }: { productId: string }) {
         <CardDescription>{description}</CardDescription>
       </CardHeader>
     </Card>
-  )
+  );
 }
 ```
 
 **Puntos clave:**
+
 - `'use cache'` marca el componente como cacheable
 - `cacheTag` permite revalidación selectiva
 - `cacheLife('weeks')` define duración del cache
@@ -128,12 +131,12 @@ async function ProductText({ productId }: { productId: string }) {
 
 ```tsx title="app/product/[id]/_components/product-price.tsx"
 async function ProductPrice({ productId }: { productId: string }) {
-  'use cache'
-  cacheTag(`product-price-${productId}`)
-  cacheLife('hours') // Cache medio: cambia ocasionalmente
-  
-  const { price } = await db.getProductPrice(productId)
-  
+  "use cache";
+  cacheTag(`product-price-${productId}`);
+  cacheLife("hours"); // Cache medio: cambia ocasionalmente
+
+  const { price } = await db.getProductPrice(productId);
+
   return (
     <Card className="border-blue-200">
       <CardHeader>
@@ -148,7 +151,7 @@ async function ProductPrice({ productId }: { productId: string }) {
         </div>
       </CardHeader>
     </Card>
-  )
+  );
 }
 ```
 
@@ -157,16 +160,16 @@ async function ProductPrice({ productId }: { productId: string }) {
 ```tsx title="app/product/[id]/_components/product-stock.tsx"
 async function ProductStock({ productId }: { productId: string }) {
   // Sin 'use cache' - siempre fresh
-  
-  const { stock, lastChecked } = await db.getProductStock(productId)
-  
+
+  const { stock, lastChecked } = await db.getProductStock(productId);
+
   return (
     <Card className="border-amber-200">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
             <CardDescription>Stock disponible</CardDescription>
-            <CardTitle className={stock < 10 ? 'text-red-600' : ''}>
+            <CardTitle className={stock < 10 ? "text-red-600" : ""}>
               {stock} unidades
             </CardTitle>
             <p className="text-xs text-muted-foreground">
@@ -179,94 +182,91 @@ async function ProductStock({ productId }: { productId: string }) {
         </div>
       </CardHeader>
     </Card>
-  )
+  );
 }
 ```
 
 <Callout type="success">
-**Sin `use cache`** = el componente se ejecuta en cada request y hace streaming.
+  **Sin `use cache`** = el componente se ejecuta en cada request y hace
+  streaming.
 </Callout>
 
 ### Página principal con Suspense
 
 ```tsx title="app/product/[id]/page.tsx"
-import { Suspense } from 'react'
+import { Suspense } from "react";
 
 // Componente principal - SYNC, solo estructura
 export default function ProductPage({
   params,
 }: {
-  params: Promise<{ id: string }>
+  params: Promise<{ id: string }>;
 }) {
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       <Link href="/">← Volver</Link>
-      
+
       {/* Todo el contenido dinámico en Suspense */}
       <Suspense fallback={<ProductPageSkeleton />}>
         <ProductContent params={params} />
       </Suspense>
     </div>
-  )
+  );
 }
 
 // Contenido - ASYNC, accede a params
-async function ProductContent({
-  params,
-}: {
-  params: Promise<{ id: string }>
-}) {
-  const { id } = await params
-  
+async function ProductContent({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+
   return (
     <div className="space-y-6">
       {/* Texto y precio: cacheados, van al static shell */}
       <ProductText productId={id} />
       <ProductPrice productId={id} />
-      
+
       {/* Stock: sin cache, requiere Suspense adicional */}
       <Suspense fallback={<StockSkeleton />}>
         <ProductStock productId={id} />
       </Suspense>
     </div>
-  )
+  );
 }
 ```
 
 <Callout type="error">
-**Crítico:** `params` es runtime data y debe accederse dentro de Suspense.
+  **Crítico:** `params` es runtime data y debe accederse dentro de Suspense.
 </Callout>
 
 ### Server Actions para revalidación
 
 ```ts title="app/actions.ts"
-'use server'
+"use server";
 
-import { revalidateTag } from 'next/cache'
-import { z } from 'zod'
+import { revalidateTag } from "next/cache";
+import { z } from "zod";
 
 const productIdSchema = z
   .string()
   .trim()
   .min(1)
-  .regex(/^[a-zA-Z0-9-]+$/)
+  .regex(/^[a-zA-Z0-9-]+$/);
 
 function validateProductId(productId: string) {
-  return productIdSchema.parse(productId)
+  return productIdSchema.parse(productId);
 }
 
 export async function revalidateProductPrice(productId: string) {
-  const safeProductId = validateProductId(productId)
-  console.log(`[Server Action] Revalidating price for ${safeProductId}`)
-  revalidateTag(`product-price-${safeProductId}`, 'max')
-  return { success: true, message: 'Precio revalidado' }
+  const safeProductId = validateProductId(productId);
+  console.log(`[Server Action] Revalidating price for ${safeProductId}`);
+  revalidateTag(`product-price-${safeProductId}`, "max");
+  return { success: true, message: "Precio revalidado" };
 }
 
 export async function revalidateProductText(productId: string) {
-  const safeProductId = validateProductId(productId)
-  console.log(`[Server Action] Revalidating text for ${safeProductId}`)
-  revalidateTag(`product-text-${safeProductId}`, 'max')
-  return { success: true, message: 'Texto revalidado' }
+  const safeProductId = validateProductId(productId);
+  console.log(`[Server Action] Revalidating text for ${safeProductId}`);
+  revalidateTag(`product-text-${safeProductId}`, "max");
+  return { success: true, message: "Texto revalidado" };
 }
 ```
 
@@ -276,7 +276,8 @@ export async function revalidateProductText(productId: string) {
 
 ## Timeline de Ejecución
 
-<Mermaid chart={`gantt
+<Mermaid
+  chart={`gantt
     title Timeline de Build y Request
     dateFormat  s
     axisFormat %S
@@ -291,11 +292,14 @@ export async function revalidateProductText(productId: string) {
     Servir Static Shell    :b1, 0, 1s
     Mostrar Skeleton       :b2, 0, 1s
     ProductStock (Query)   :b3, 1, 3s
-    Streaming de HTML      :b4, 3, 4s`} />
+    Streaming de HTML      :b4, 3, 4s`}
+/>
 
 <Callout type="info">
-En **Build Time**, el texto y precio ejecutan sus queries de Base de Datos para guardarse en el prerender. El stock se ignora. <br/>
-En **Request Time**, el stock ejecuta su query mientas el usuario ya está viendo el contenido prerenderizado (static shell).
+  En **Build Time**, el texto y precio ejecutan sus queries de Base de Datos
+  para guardarse en el prerender. El stock se ignora. <br />
+  En **Request Time**, el stock ejecuta su query mientas el usuario ya está
+  viendo el contenido prerenderizado (static shell).
 </Callout>
 
 ## Verificación
@@ -332,7 +336,8 @@ Route (app)                    Size     First Load JS
 ```
 
 <Callout type="success">
-Si ves `◐ Partial Prerender` para `/product/[id]`, está funcionando correctamente para este demo de Cache Components.
+  Si ves `◐ Partial Prerender` para `/product/[id]`, está funcionando
+  correctamente para este demo de Cache Components.
 </Callout>
 
 ## Debugging
@@ -356,8 +361,8 @@ Agrega logs en cada componente:
 
 ```tsx
 async function ProductPrice({ productId }) {
-  'use cache'
-  console.log(`[${new Date().toISOString()}] Rendering ProductPrice`)
+  "use cache";
+  console.log(`[${new Date().toISOString()}] Rendering ProductPrice`);
   // ...
 }
 ```

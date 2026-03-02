@@ -1,22 +1,42 @@
-'use client';
-import { useI18n } from 'fumadocs-ui/contexts/i18n';
-import { cn } from '../../lib/cn';
-import { type ComponentProps, useRef } from 'react';
-import { mergeRefs } from '../../lib/merge-refs';
-import { TocThumb, useTOCItems } from './index';
-import * as Primitive from 'fumadocs-core/toc';
+"use client";
+import * as Primitive from "fumadocs-core/toc";
+import { useI18n } from "fumadocs-ui/contexts/i18n";
+import { useRef } from "react";
+import type { ComponentProps } from "react";
 
-export function TOCItems({ ref, className, ...props }: ComponentProps<'div'>) {
+import { cn } from "@/lib/cn";
+import { mergeRefs } from "@/lib/merge-refs";
+
+import { TocThumb, useTOCItems } from "./index";
+
+function TOCItem({ item }: { item: Primitive.TOCItemType }) {
+  return (
+    <Primitive.TOCItem
+      href={item.url}
+      className={cn(
+        "prose py-1.5 text-sm text-fd-muted-foreground transition-colors wrap-anywhere first:pt-0 last:pb-0 data-[active=true]:text-fd-primary",
+        item.depth <= 2 && "ps-3",
+        item.depth === 3 && "ps-6",
+        item.depth >= 4 && "ps-8"
+      )}
+    >
+      {item.title}
+    </Primitive.TOCItem>
+  );
+}
+
+export function TOCItems({ ref, className, ...props }: ComponentProps<"div">) {
   const containerRef = useRef<HTMLDivElement>(null);
   const items = useTOCItems();
   const { text } = useI18n();
 
-  if (items.length === 0)
+  if (items.length === 0) {
     return (
       <div className="rounded-lg border bg-fd-card p-3 text-xs text-fd-muted-foreground">
         {text.tocNoHeadings}
       </div>
     );
+  }
 
   return (
     <>
@@ -26,7 +46,10 @@ export function TOCItems({ ref, className, ...props }: ComponentProps<'div'>) {
       />
       <div
         ref={mergeRefs(ref, containerRef)}
-        className={cn('flex flex-col border-s border-fd-foreground/10', className)}
+        className={cn(
+          "flex flex-col border-s border-fd-foreground/10",
+          className
+        )}
         {...props}
       >
         {items.map((item) => (
@@ -34,21 +57,5 @@ export function TOCItems({ ref, className, ...props }: ComponentProps<'div'>) {
         ))}
       </div>
     </>
-  );
-}
-
-function TOCItem({ item }: { item: Primitive.TOCItemType }) {
-  return (
-    <Primitive.TOCItem
-      href={item.url}
-      className={cn(
-        'prose py-1.5 text-sm text-fd-muted-foreground transition-colors wrap-anywhere first:pt-0 last:pb-0 data-[active=true]:text-fd-primary',
-        item.depth <= 2 && 'ps-3',
-        item.depth === 3 && 'ps-6',
-        item.depth >= 4 && 'ps-8',
-      )}
-    >
-      {item.title}
-    </Primitive.TOCItem>
   );
 }

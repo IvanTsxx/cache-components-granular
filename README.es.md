@@ -113,14 +113,14 @@ En la consola verás:
 ```tsx
 // El componente async ES una promesa
 async function ProductStock({ productId }) {
-  const stock = await db.getStock(productId)
-  return <div>{stock}</div>
+  const stock = await db.getStock(productId);
+  return <div>{stock}</div>;
 }
 
 // Por eso Suspense va en el PADRE
 <Suspense fallback="Loading...">
-  <ProductStock />  {/* ← Esta línea crea la promesa */}
-</Suspense>
+  <ProductStock /> {/* ← Esta línea crea la promesa */}
+</Suspense>;
 ```
 
 ### 2. Múltiples queries vs Cache
@@ -135,10 +135,10 @@ Sí, son múltiples queries, pero:
 
 ```tsx
 // Cachear con tag
-cacheTag(`product-price-${productId}`)
+cacheTag(`product-price-${productId}`);
 
 // Revalidar solo ese campo
-revalidateTag(`product-price-${productId}`, 'max')
+revalidateTag(`product-price-${productId}`, "max");
 ```
 
 ## 📖 Documentación interna
@@ -179,8 +179,8 @@ revalidateTag(`product-price-${productId}`, 'max')
 **Solución:** Verificar que el tag sea idéntico en cache y revalidación, por ejemplo:
 
 ```ts
-cacheTag(`product-price-${productId}`)
-revalidateTag(`product-price-${productId}`, 'max')
+cacheTag(`product-price-${productId}`);
+revalidateTag(`product-price-${productId}`, "max");
 ```
 
 ## 🤝 Contribuciones

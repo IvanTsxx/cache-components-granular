@@ -3,8 +3,8 @@ title: Shared Promise Case
 description: One query, one promise and Suspense per block
 ---
 
-import { Callout } from 'fumadocs-ui/components/callout';
-import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
+import { Callout } from "fumadocs-ui/components/callout";
+import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 
 # Alternative case: Shared promise per field
 
@@ -20,7 +20,8 @@ import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
 
 ## Implementation
 
-<Mermaid chart={`graph TD
+<Mermaid
+  chart={`graph TD
     Parent["ProductContent (Shared Promise)"]
     Promise{"db.getProduct(id) [Promise]"}
     
@@ -37,15 +38,16 @@ import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
     Promise -.-> Price
     Promise -.-> Stock
     
-    style Promise fill:#3b82f6,stroke:#1d4ed8,color:#fff`} />
+    style Promise fill:#3b82f6,stroke:#1d4ed8,color:#fff`}
+/>
 
 ```tsx title="app/product/[id]/shared-promise/_components/product-content-shared-promise.tsx"
 export async function ProductContentSharedPromise({ params }) {
-  const { id } = await params
-  const safeProductId = parseProductId(id)
+  const { id } = await params;
+  const safeProductId = parseProductId(id);
 
   // A single call / a single promise
-  const productPromise = db.getProduct(safeProductId)
+  const productPromise = db.getProduct(safeProductId);
 
   return (
     <>
@@ -61,7 +63,7 @@ export async function ProductContentSharedPromise({ params }) {
         <ProductStockFromPromise productPromise={productPromise} />
       </Suspense>
     </>
-  )
+  );
 }
 ```
 
@@ -70,8 +72,12 @@ Every block consumes the exact same promise:
 ```tsx title="Block example"
 export async function ProductStockFromPromise({ productPromise }) {
   // Await the promise resolution within the Suspense boundary
-  const { stock, lastChecked } = await productPromise
-  return <div>{stock} - {lastChecked}</div>
+  const { stock, lastChecked } = await productPromise;
+  return (
+    <div>
+      {stock} - {lastChecked}
+    </div>
+  );
 }
 ```
 
@@ -80,23 +86,27 @@ export async function ProductStockFromPromise({ productPromise }) {
 <Tabs items={['Advantages', 'Trade-offs']}>
   <Tab value="Advantages">
 
-  - ✅ Only one DB query per request fetching the entire payload
-  - ✅ Less data access logic duplication
-  - ✅ Visual granularity: each block retains its own `Suspense` boundary
-  - ✅ Useful when fields change together or a record is small enough to load entirely
+- ✅ Only one DB query per request fetching the entire payload
+- ✅ Less data access logic duplication
+- ✅ Visual granularity: each block retains its own `Suspense` boundary
+- ✅ Useful when fields change together or a record is small enough to load entirely
 
-  </Tab>
+</Tab>
+
   <Tab value="Trade-offs">
 
-  - ⚠️ If you invalidate this resource, the entire payload is recalculated
-  - ⚠️ You lose fine-grained per-field invalidation (e.g. text/price caches separately)
-  - ⚠️ Query cost might increment if you only needed one single field
+- ⚠️ If you invalidate this resource, the entire payload is recalculated
+- ⚠️ You lose fine-grained per-field invalidation (e.g. text/price caches separately)
+- ⚠️ Query cost might increment if you only needed one single field
 
-  </Tab>
+</Tab>
+
 </Tabs>
 
 <Callout type="info">
-There is no universally best option. This pattern prioritizes data-access simplicity + single query, while the multi-query approach prioritizes field-level cache invalidation.
+  There is no universally best option. This pattern prioritizes data-access
+  simplicity + single query, while the multi-query approach prioritizes
+  field-level cache invalidation.
 </Callout>
 
 ## When to use each pattern

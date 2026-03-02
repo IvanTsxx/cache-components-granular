@@ -19,9 +19,9 @@ This project demonstrates how to cache **individual fields of a record** using d
 
 You have a product with three fields that change at different rates:
 
-- **Text** (name + description): Rarely changes  
-- **Price**: Changes occasionally  
-- **Stock**: Must always be up to date  
+- **Text** (name + description): Rarely changes
+- **Price**: Changes occasionally
+- **Stock**: Must always be up to date
 
 How do you cache each field independently?
 
@@ -36,7 +36,7 @@ Each field is implemented as a **separate async component**, with its own query 
 <Suspense>
   <ProductStock productId={id} />   // No cache (streaming)
 </Suspense>
-````
+```
 
 ---
 
@@ -99,7 +99,6 @@ Open: [http://localhost:3000](http://localhost:3000)
 - Disable cache
 - Navigate to a product
 - Notice:
-
   - Initial HTML already contains text and price
   - Stock arrives later via streaming
 
@@ -129,14 +128,14 @@ In your terminal:
 ```tsx
 // An async component IS a promise
 async function ProductStock({ productId }) {
-  const stock = await db.getStock(productId)
-  return <div>{stock}</div>
+  const stock = await db.getStock(productId);
+  return <div>{stock}</div>;
 }
 
 // Suspense must wrap it in the PARENT
 <Suspense fallback="Loading...">
-  <ProductStock />  {/* ← This line creates the promise */}
-</Suspense>
+  <ProductStock /> {/* ← This line creates the promise */}
+</Suspense>;
 ```
 
 ---
@@ -155,10 +154,10 @@ Yes, there are multiple queries — but:
 
 ```tsx
 // Cache with tag
-cacheTag(`product-price-${productId}`)
+cacheTag(`product-price-${productId}`);
 
 // Revalidate only that field
-revalidateTag(`product-price-${productId}`, 'max')
+revalidateTag(`product-price-${productId}`, "max");
 ```
 
 ---
@@ -209,8 +208,8 @@ revalidateTag(`product-price-${productId}`, 'max')
 **Fix:** Ensure the tag is identical in both cache and revalidation:
 
 ```ts
-cacheTag(`product-price-${productId}`)
-revalidateTag(`product-price-${productId}`, 'max')
+cacheTag(`product-price-${productId}`);
+revalidateTag(`product-price-${productId}`, "max");
 ```
 
 ---

@@ -3,14 +3,16 @@ title: Cache Components
 description: Granular field-level caching in Next.js 16
 ---
 
-import { Callout } from 'fumadocs-ui/components/callout';
-import { Card, Cards } from 'fumadocs-ui/components/card';
-import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
+import { Callout } from "fumadocs-ui/components/callout";
+import { Card, Cards } from "fumadocs-ui/components/card";
+import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 
 # Cache Components - Granular Caching
 
 <Callout type="info">
-Interactive demo on how to cache **individual fields** of a record with different strategies in Next.js 16, improving perceived latency and reducing infrastructure load during request time.
+  Interactive demo on how to cache **individual fields** of a record with
+  different strategies in Next.js 16, improving perceived latency and reducing
+  infrastructure load during request time.
 </Callout>
 
 ## The Problem
@@ -18,7 +20,7 @@ Interactive demo on how to cache **individual fields** of a record with differen
 Imagine you have a **product** with 3 fields:
 
 - **Text** (name + description): Rarely changes
-- **Price**: Changes occasionally  
+- **Price**: Changes occasionally
 - **Stock**: Must be always up-to-date
 
 How do you cache each field independently?
@@ -29,11 +31,15 @@ How do you cache each field independently?
 // Trying to selectively cache from a single object
 async function ProductPage({ productId }) {
   // A single query fetches everything
-  const product = await db.query('SELECT * FROM products WHERE id = ?')
-  
+  const product = await db.query("SELECT * FROM products WHERE id = ?");
+
   // How do I cache only the price?
   // How do I NOT cache the stock?
-  return <div>{product.name} - ${product.price} - Stock: {product.stock}</div>
+  return (
+    <div>
+      {product.name} - ${product.price} - Stock: {product.stock}
+    </div>
+  );
 }
 ```
 
@@ -49,36 +55,38 @@ export default function ProductPage({ params }) {
     <Suspense fallback={<PageSkeleton />}>
       <ProductContent params={params} />
     </Suspense>
-  )
+  );
 }
 
 async function ProductContent({ params }) {
-  const { id } = await params
-  
+  const { id } = await params;
+
   return (
     <div>
       {/* FIELD 1: Cached text */}
       <ProductText productId={id} />
-      
+
       {/* FIELD 2: Cached price */}
       <ProductPrice productId={id} />
-      
+
       {/* FIELD 3: Uncached stock */}
       <Suspense fallback={<StockSkeleton />}>
         <ProductStock productId={id} />
       </Suspense>
     </div>
-  )
+  );
 }
 ```
 
 <Callout type="warning">
-**Important:** The Suspense boundary goes in the **parent**, not inside the async component.
+  **Important:** The Suspense boundary goes in the **parent**, not inside the
+  async component.
 </Callout>
 
 ## Architecture
 
-<Mermaid chart={`graph TD
+<Mermaid
+  chart={`graph TD
   Page["ProductPage (sync - static)"] --> Suspense1["&lt;Suspense&gt;"]
   Suspense1 --> Content["ProductContent (async - accesses params)"]
   
@@ -91,27 +99,22 @@ async function ProductContent({ params }) {
   style Page stroke:#333,stroke-width:2px
   style Text stroke:#10b981,stroke-width:2px
   style Price stroke:#10b981,stroke-width:2px
-  style Stock stroke:#ef4444,stroke-width:2px`} />
+  style Stock stroke:#ef4444,stroke-width:2px`}
+/>
 
 ## Visual Comparison
 
-<Tabs items={['Build Time', 'Request Time']}>
+<Tabs items={["Build Time", "Request Time"]}>
   <Tab value="Build Time">
-    At build time, Next.js prerenders the page:
-    
-    - ✅ `ProductText` executes query → included in static shell
-    - ✅ `ProductPrice` executes query → included in static shell
-    - ❌ `ProductStock` is NOT executed (requires request context)
-    
-    **Result:** HTML with text and price already rendered
+    At build time, Next.js prerenders the page: - ✅ `ProductText` executes
+    query → included in static shell - ✅ `ProductPrice` executes query →
+    included in static shell - ❌ `ProductStock` is NOT executed (requires
+    request context) **Result:** HTML with text and price already rendered
   </Tab>
-  
+
   <Tab value="Request Time">
-    When a user visits the page:
-    
-    1. ⚡ Browser receives HTML instantly (text + price)
-    2. ⚡ Browser shows stock skeleton
-    3. 🔄 Server executes stock query
+    When a user visits the page: 1. ⚡ Browser receives HTML instantly (text +
+    price) 2. ⚡ Browser shows stock skeleton 3. 🔄 Server executes stock query
     4. ⚡ Stock streams in and replaces skeleton
   </Tab>
 </Tabs>
@@ -119,27 +122,27 @@ async function ProductContent({ params }) {
 ## Next steps
 
 <Cards>
-  <Card 
-    title="Implementation" 
+  <Card
+    title="Implementation"
     href="/docs/implementation"
     description="Step-by-step complete code"
   />
-  <Card 
-    title="Key concepts" 
+  <Card
+    title="Key concepts"
     href="/docs/concepts"
     description="Suspense, queries and cache"
   />
-  <Card 
-    title="Revalidation" 
+  <Card
+    title="Revalidation"
     href="/docs/revalidation"
     description="updateTag vs revalidateTag"
   />
-  <Card 
-    title="Case: Shared promise" 
+  <Card
+    title="Case: Shared promise"
     href="/docs/shared-promise"
     description="A single query + Suspense per block"
   />
-  <Card 
+  <Card
     title="Benefits and costs"
     href="/docs/benefits"
     description="How to estimate CPU/DB savings and decide granularity"

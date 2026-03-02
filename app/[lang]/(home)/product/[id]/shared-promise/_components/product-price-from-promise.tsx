@@ -1,46 +1,47 @@
 import { Badge } from "@/components/ui/badge";
 import { CacheAge } from "@/components/ui/cache-age";
 import {
-	Card,
-	CardDescription,
-	CardHeader,
-	CardTitle,
+  Card,
+  CardDescription,
+  CardHeader,
+  CardTitle,
 } from "@/components/ui/card";
+
 import type { SharedProductPayload } from "./shared-product";
 
 export async function ProductPriceFromPromise({
-	productPromise,
-	lang,
+  productPromise,
+  lang,
 }: {
-	productPromise: Promise<SharedProductPayload>;
-	lang: string;
+  productPromise: Promise<SharedProductPayload>;
+  lang: string;
 }) {
-	const { price, cacheCreatedAt } = await productPromise;
+  const { price, cacheCreatedAt } = await productPromise;
 
-	return (
-		<Card className="border-blue-200 dark:border-blue-800">
-			<CardHeader>
-				<div className="flex items-center justify-between gap-3">
-					<div>
-						<CardDescription>
-							{lang === "es" ? "Precio" : "Price"}
-						</CardDescription>
-						<CardTitle className="font-bold text-4xl">
-							${price.toFixed(2)}
-						</CardTitle>
-					</div>
-					<Badge
-						variant="secondary"
-						className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100"
-					>
-						{lang === "es" ? "🧩 Promise compartida" : "🧩 Shared Promise"}
-					</Badge>
-				</div>
-				<CacheAge
-					cachedAt={cacheCreatedAt}
-					label={lang === "es" ? "Tiempo en cache" : "Time in cache"}
-				/>
-			</CardHeader>
-		</Card>
-	);
+  return (
+    <Card className="border-blue-200 dark:border-blue-800">
+      <CardHeader>
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <CardDescription>
+              {lang === "es" ? "Precio" : "Price"}
+            </CardDescription>
+            <CardTitle className="font-bold text-4xl">
+              ${price.toFixed(2)}
+            </CardTitle>
+          </div>
+          <Badge
+            variant="secondary"
+            className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100"
+          >
+            {lang === "es" ? "🧩 Promise compartida" : "🧩 Shared Promise"}
+          </Badge>
+        </div>
+        <CacheAge
+          cachedAt={cacheCreatedAt}
+          label={lang === "es" ? "Tiempo en cache" : "Time in cache"}
+        />
+      </CardHeader>
+    </Card>
+  );
 }

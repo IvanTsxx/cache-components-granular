@@ -3,14 +3,16 @@ title: Cache Components
 description: Cacheo granular por campo en Next.js 16
 ---
 
-import { Callout } from 'fumadocs-ui/components/callout';
-import { Card, Cards } from 'fumadocs-ui/components/card';
-import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
+import { Callout } from "fumadocs-ui/components/callout";
+import { Card, Cards } from "fumadocs-ui/components/card";
+import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 
 # Cache Components - Cacheo Granular
 
 <Callout type="info">
-Demo interactivo de cómo cachear **campos individuales** de un registro con diferentes estrategias en Next.js 16, mejorando latencia percibida y reduciendo carga en infraestructura durante request time.
+  Demo interactivo de cómo cachear **campos individuales** de un registro con
+  diferentes estrategias en Next.js 16, mejorando latencia percibida y
+  reduciendo carga en infraestructura durante request time.
 </Callout>
 
 ## El Problema
@@ -18,7 +20,7 @@ Demo interactivo de cómo cachear **campos individuales** de un registro con dif
 Imagina que tienes un **producto** con 3 campos:
 
 - **Texto** (nombre + descripción): Rara vez cambia
-- **Precio**: Cambia ocasionalmente  
+- **Precio**: Cambia ocasionalmente
 - **Stock**: Debe estar siempre actualizado
 
 ¿Cómo cacheas cada campo de forma independiente?
@@ -29,11 +31,15 @@ Imagina que tienes un **producto** con 3 campos:
 // Intentar cachear selectivamente desde un solo objeto
 async function ProductPage({ productId }) {
   // Una sola query trae todo
-  const product = await db.query('SELECT * FROM products WHERE id = ?')
-  
+  const product = await db.query("SELECT * FROM products WHERE id = ?");
+
   // ¿Cómo cacheo solo el precio?
   // ¿Cómo NO cacheo el stock?
-  return <div>{product.name} - ${product.price} - Stock: {product.stock}</div>
+  return (
+    <div>
+      {product.name} - ${product.price} - Stock: {product.stock}
+    </div>
+  );
 }
 ```
 
@@ -49,31 +55,32 @@ export default function ProductPage({ params }) {
     <Suspense fallback={<PageSkeleton />}>
       <ProductContent params={params} />
     </Suspense>
-  )
+  );
 }
 
 async function ProductContent({ params }) {
-  const { id } = await params
-  
+  const { id } = await params;
+
   return (
     <div>
       {/* CAMPO 1: Texto cacheado */}
       <ProductText productId={id} />
-      
+
       {/* CAMPO 2: Precio cacheado */}
       <ProductPrice productId={id} />
-      
+
       {/* CAMPO 3: Stock sin cache */}
       <Suspense fallback={<StockSkeleton />}>
         <ProductStock productId={id} />
       </Suspense>
     </div>
-  )
+  );
 }
 ```
 
 <Callout type="warning">
-**Importante:** El Suspense va en el **padre**, no dentro del componente async.
+  **Importante:** El Suspense va en el **padre**, no dentro del componente
+  async.
 </Callout>
 
 ## Arquitectura
@@ -83,66 +90,61 @@ async function ProductContent({ params }) {
   Page["ProductPage (sync - estático)"] --> Suspense1["&lt;Suspense&gt;"]
   Suspense1 --> Content["ProductContent (async - accede a params)"]
 
-  Content --> Text["ProductText (async + 'use cache')"]
-  Content --> Price["ProductPrice (async + 'use cache')"]
-  Content --> Suspense2["&lt;Suspense&gt;"]
+Content --> Text["ProductText (async + 'use cache')"]
+Content --> Price["ProductPrice (async + 'use cache')"]
+Content --> Suspense2["&lt;Suspense&gt;"]
 
-  Suspense2 --> Stock["ProductStock (async sin cache)"]
+Suspense2 --> Stock["ProductStock (async sin cache)"]
 
-  style Page stroke:#333,stroke-width:2px
-  style Text stroke:#10b981,stroke-width:2px
-  style Price stroke:#10b981,stroke-width:2px
-  style Stock stroke:#ef4444,stroke-width:2px
+style Page stroke:#333,stroke-width:2px
+style Text stroke:#10b981,stroke-width:2px
+style Price stroke:#10b981,stroke-width:2px
+style Stock stroke:#ef4444,stroke-width:2px
 `}
 />
 
 ## Comparación Visual
 
-<Tabs items={['Build Time', 'Request Time']}>
+<Tabs items={["Build Time", "Request Time"]}>
   <Tab value="Build Time">
-    En build time, Next.js prerrenderiza la página:
-    
-    - ✅ `ProductText` ejecuta query → incluido en static shell
-    - ✅ `ProductPrice` ejecuta query → incluido en static shell
-    - ❌ `ProductStock` NO se ejecuta (requiere request context)
-    
-    **Resultado:** HTML con texto y precio ya renderizados
+    En build time, Next.js prerrenderiza la página: - ✅ `ProductText` ejecuta
+    query → incluido en static shell - ✅ `ProductPrice` ejecuta query →
+    incluido en static shell - ❌ `ProductStock` NO se ejecuta (requiere request
+    context) **Resultado:** HTML con texto y precio ya renderizados
   </Tab>
-  
+
   <Tab value="Request Time">
-    Cuando un usuario visita la página:
-    
-    1. ⚡ Browser recibe HTML instantáneamente (texto + precio)
-    2. ⚡ Browser muestra skeleton del stock
-    3. 🔄 Server ejecuta query de stock
-    4. ⚡ Stock hace streaming y reemplaza skeleton
+    Cuando un usuario visita la página: 1. ⚡ Browser recibe HTML
+    instantáneamente (texto + precio) 2. ⚡ Browser muestra skeleton del stock
+    3. 🔄 Server ejecuta query de stock 4. ⚡ Stock hace streaming y reemplaza
+    skeleton
   </Tab>
 </Tabs>
 
 ## Siguientes pasos
 
 <Cards>
-  <Card 
-    title="Implementación" 
+  <Card
+    title="Implementación"
     href="/docs/implementation"
     description="Código completo paso a paso"
   />
-  <Card 
-    title="Conceptos clave" 
+  <Card
+    title="Conceptos clave"
     href="/docs/concepts"
     description="Suspense, queries y cache"
   />
-  <Card 
-    title="Revalidación" 
+  <Card
+    title="Revalidación"
     href="/docs/revalidation"
     description="updateTag vs revalidateTag"
   />
-  <Card 
-    title="Caso: Promise compartida" 
+  <Card
+    title="Caso: Promise compartida"
     href="/docs/shared-promise"
     description="Una sola query + Suspense por bloque"
   />
-  <Card 
+  <Card
     title="Beneficios y costes"
     href="/docs/benefits"
     description="Cómo estimar ahorro de CPU/DB y decidir granularidad"

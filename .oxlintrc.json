@@ -3,5 +3,12 @@
   "extends": [
     "./node_modules/ultracite/config/oxlint/core/.oxlintrc.json",
     "./node_modules/ultracite/config/oxlint/next/.oxlintrc.json"
-  ]
+  ],
+  "rules": {
+    "func-style": "off",
+    "max-statements": "off",
+    "complexity": "off",
+    "no-param-reassign": "off",
+    "no-shadow": "off"
+  }
 }

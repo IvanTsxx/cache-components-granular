@@ -1,11 +1,12 @@
-import { docs } from "fumadocs-mdx:collections/server";
 import { loader } from "fumadocs-core/source";
 import { lucideIconsPlugin } from "fumadocs-core/source/lucide-icons";
+import { docs } from "fumadocs-mdx:collections/server";
+
 import { i18n } from "./i18n";
 
 export const source = loader({
-	i18n,
-	baseUrl: "/docs",
-	source: docs.toFumadocsSource(),
-	plugins: [lucideIconsPlugin()],
+  baseUrl: "/docs",
+  i18n,
+  plugins: [lucideIconsPlugin()],
+  source: docs.toFumadocsSource(),
 });
