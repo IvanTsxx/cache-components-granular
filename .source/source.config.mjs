@@ -11,23 +11,20 @@ var docs = defineDocs({
   dir: "content/docs",
   docs: {
     postprocess: {
-      includeProcessedMarkdown: true
+      includeProcessedMarkdown: true,
     },
     schema: pageSchema.extend({
-      keywords: z.array(z.string()).optional()
-    })
+      keywords: z.array(z.string()).optional(),
+    }),
   },
   meta: {
-    schema: metaSchema
-  }
+    schema: metaSchema,
+  },
 });
 var source_config_default = defineConfig({
   mdxOptions: {
-    remarkPlugins: [[remarkFeedbackBlock, feedbackOptions]]
+    remarkPlugins: [[remarkFeedbackBlock, feedbackOptions]],
   },
-  plugins: [lastModified()]
+  plugins: [lastModified()],
 });
-export {
-  source_config_default as default,
-  docs
-};
+export { source_config_default as default, docs };
