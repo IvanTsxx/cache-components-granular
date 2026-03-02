@@ -23,6 +23,7 @@
     "mermaid": "^11.12.3",
     "next": "16.1.6",
     "next-themes": "^0.4.6",
+    "octokit": "^5.0.5",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "scroll-into-view-if-needed": "^3.1.0",

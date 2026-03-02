@@ -2,12 +2,14 @@ import { createRelativeLink } from "fumadocs-ui/mdx";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
+import { Feedback } from "@/components/feedback/client";
 import {
   DocsBody,
   DocsDescription,
   DocsPage,
   DocsTitle,
 } from "@/components/layout/notebook/page";
+import { onPageFeedbackAction } from "@/lib/github";
 import { source } from "@/lib/source";
 import { getMDXComponents } from "@/mdx-components";
 
@@ -34,6 +36,7 @@ export default async function Page(
           })}
         />
       </DocsBody>
+      <Feedback onSendAction={onPageFeedbackAction} />
     </DocsPage>
   );
 }
